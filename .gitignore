@@ -1,3 +1,6 @@
 .firebase/
 node_modules/
 .DS_Store
+
+# Copias de trabajo temporales de Claude Code (no se suben)
+.claude/worktrees/
