@@ -20,19 +20,17 @@ export function categoriaPorId(id) {
 
 // Paraderos para el MODO DEMO (sin Firebase).
 // Con Firebase, los paraderos se leen de la colección "paraderos" de
-// Firestore; esta lista es también la referencia de qué crear allá.
-//
-// ⚠️ COORDENADAS APROXIMADAS alrededor del campus. Antes de presentar,
-//    verifiquen cada paradero en Google Maps (clic derecho → copiar
-//    coordenadas) y actualicen lat/lng aquí y en Firestore.
-// ⚠️ El cuarto paradero es un marcador de posición: cambien "codigo"
-//    y "nombre" por el paradero real que agregaron al alcance.
+// Firestore; esta lista es también la referencia de qué crear allá
+// (codigo = id del documento).
+// Coordenadas exactas tomadas de Google Maps por el equipo.
+// Las Nieves y Estación Universidades no tienen código SITP registrado
+// aquí, así que usan un id descriptivo.
 export const PARADEROS_DEMO = [
-  { codigo: "481A00", nombre: "Paradero 481A00", lat: 4.6031, lng: -74.0690 },
-  { codigo: "504A00", nombre: "Paradero 504A00", lat: 4.6010, lng: -74.0705 },
-  { codigo: "907A00", nombre: "Paradero 907A00", lat: 4.6045, lng: -74.0662 },
-  { codigo: "PARADERO4", nombre: "Cuarto paradero (por definir)", lat: 4.6018, lng: -74.0672 },
+  { codigo: "481A00", nombre: "U. Jorge Tadeo Lozano 481A00", lat: 4.607891187072479, lng: -74.06873441620392 },
+  { codigo: "504A00", nombre: "U. Jorge Tadeo Lozano 504A00", lat: 4.606975419584897, lng: -74.06745538416442 },
+  { codigo: "LAS_NIEVES", nombre: "Br. Las Nieves", lat: 4.608110479244784, lng: -74.06717069923171 },
+  { codigo: "EST_UNIVERSIDADES", nombre: "Estación Universidades", lat: 4.605146708561095, lng: -74.06722341866632 },
 ];
 
-// Centro del mapa: campus de la Tadeo (Cra. 4 # 22-61, Bogotá), aproximado.
-export const CENTRO_MAPA = [4.6025, -74.0680];
+// Centro del mapa: punto medio entre los 4 paraderos.
+export const CENTRO_MAPA = [4.6068, -74.0677];

@@ -42,21 +42,24 @@ producción bloquea todo.
 Firestore Database → pestaña **Datos** → **+ Iniciar colección**:
 
 1. ID de la colección: `paraderos` → Siguiente.
-2. ID del documento: `481A00` (el código SITP, **no** uses "ID automático").
-3. Campos:
+2. ID del documento: escríbelo a mano (**no** uses "ID automático").
+3. Agrega 3 campos: `nombre` (tipo string), `lat` (tipo number), `lng` (tipo number).
+4. **Guardar**. Repite con **+ Agregar documento** hasta tener los 4:
 
-   | Campo    | Tipo   | Valor                    |
-   |----------|--------|--------------------------|
-   | `nombre` | string | ej. `Calle 22 con Cra 4` |
-   | `lat`    | number | ej. `4.6031`             |
-   | `lng`    | number | ej. `-74.0690`           |
+| ID del documento    | `nombre` (string)              | `lat` (number)      | `lng` (number)       |
+|---------------------|--------------------------------|---------------------|----------------------|
+| `481A00`            | `U. Jorge Tadeo Lozano 481A00` | `4.607891187072479` | `-74.06873441620392` |
+| `504A00`            | `U. Jorge Tadeo Lozano 504A00` | `4.606975419584897` | `-74.06745538416442` |
+| `LAS_NIEVES`        | `Br. Las Nieves`               | `4.608110479244784` | `-74.06717069923171` |
+| `EST_UNIVERSIDADES` | `Estación Universidades`       | `4.605146708561095` | `-74.06722341866632` |
 
-4. **Guardar**. Repite con **+ Agregar documento** para `504A00`, `907A00` y el cuarto.
-
-**¿Cómo saco lat/lng reales?** En Google Maps, clic derecho exactamente sobre el
-paradero → el primer renglón son las coordenadas (ej. `4.6031, -74.0690`); el primer
-número es `lat`, el segundo `lng`. Para que el modo demo coincida, actualiza también
+⚠️ El ID debe quedar **idéntico** (mayúsculas y guion bajo incluidos): la app y las
+reglas lo usan para relacionar cada reporte con su paradero. Es la misma lista de
 `PARADEROS_DEMO` en [`js/catalogos.js`](../js/catalogos.js).
+
+**¿Y si agregan otro paradero después?** En Google Maps, clic derecho sobre el
+paradero → el primer renglón son las coordenadas; el primer número es `lat` y el
+segundo `lng`. Créalo en Firestore y agrégalo también en `PARADEROS_DEMO`.
 
 La colección `reportes` **no** hay que crearla: aparece sola con el primer reporte.
 

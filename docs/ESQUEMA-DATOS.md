@@ -9,24 +9,33 @@ Usamos las dos colecciones que el grupo ya había diseñado: `paraderos` y `repo
 ```
 paraderos (colección)                reportes (colección)
 ├── 481A00  (documento)              ├── a8Fk2…  (documento, id automático)
-│   ├── nombre: "Paradero 481A00"    │   ├── paraderoId: "481A00"  ──┐
-│   ├── lat: 4.6031                  │   ├── categoria: "alumbrado"  │ relación:
-│   └── lng: -74.0690                │   ├── descripcion: "…"        │ apunta al id
+│   ├── nombre: "U. Jorge Tadeo…"    │   ├── paraderoId: "481A00"  ──┐
+│   ├── lat: 4.6078911…              │   ├── categoria: "alumbrado"  │ relación:
+│   └── lng: -74.0687344…            │   ├── descripcion: "…"        │ apunta al id
 ├── 504A00                           │   └── creadoEn: 1 oct 2026…   │ del paradero
-├── 907A00                           └── …                           │
-└── (cuarto paradero)  ◄─────────────────────────────────────────────┘
+├── LAS_NIEVES                       └── …                           │
+└── EST_UNIVERSIDADES  ◄─────────────────────────────────────────────┘
 ```
 
 ## Colección `paraderos`
 
 El **id del documento es el código SITP** del paradero (ej. `481A00`). Así no hace
 falta un campo extra para el código y la relación con los reportes es directa.
+Br. Las Nieves y Estación Universidades usan un id descriptivo (`LAS_NIEVES`,
+`EST_UNIVERSIDADES`) porque no registramos su código SITP.
+
+| ID                  | Nombre                       | lat                 | lng                  |
+|---------------------|------------------------------|---------------------|----------------------|
+| `481A00`            | U. Jorge Tadeo Lozano 481A00 | 4.607891187072479   | -74.06873441620392   |
+| `504A00`            | U. Jorge Tadeo Lozano 504A00 | 4.606975419584897   | -74.06745538416442   |
+| `LAS_NIEVES`        | Br. Las Nieves               | 4.608110479244784   | -74.06717069923171   |
+| `EST_UNIVERSIDADES` | Estación Universidades       | 4.605146708561095   | -74.06722341866632   |
 
 | Campo    | Tipo   | Ejemplo             | Descripción                         |
 |----------|--------|---------------------|-------------------------------------|
-| `nombre` | string | `"Calle 22 con Cra 4"` | Nombre legible para mostrar      |
-| `lat`    | number | `4.6031`            | Latitud (coordenada norte-sur)      |
-| `lng`    | number | `-74.0690`          | Longitud (coordenada este-oeste)    |
+| `nombre` | string | `"Br. Las Nieves"`  | Nombre legible para mostrar         |
+| `lat`    | number | `4.608110479244784` | Latitud (coordenada norte-sur)      |
+| `lng`    | number | `-74.06717069923171`| Longitud (coordenada este-oeste)    |
 
 Solo se crean/editan desde la consola de Firebase (la app no puede modificarlos).
 
