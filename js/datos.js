@@ -7,13 +7,14 @@
 //   obtenerParaderos()            → lista de paraderos
 //   crearReporte(datos)           → guarda un reporte nuevo
 //   escucharReportesRecientes(fn) → llama a fn cada vez que cambian los reportes
+//   guardarParadero(p)            → crea/actualiza un paradero (solo lo usa sembrar.html)
 //
 // Hay dos "motores" con las mismas funciones:
 //   - Firebase (Firestore): datos compartidos entre todo el equipo.
 //   - Demo (localStorage): datos solo en tu navegador, para probar sin Firebase.
 // ============================================================
 import { firebaseConfig, usarFirebase, DIAS_RECIENTES } from "./config.js";
-import { PARADEROS_DEMO } from "./catalogos.js";
+import { PARADEROS_SEMILLA } from "./catalogos.js";
 
 // Fecha de hace N días (para filtrar "recientes")
 function inicioPeriodo() {
@@ -30,7 +31,7 @@ async function crearMotorFirebase() {
     `https://www.gstatic.com/firebasejs/${VERSION}/firebase-app.js`
   );
   const {
-    getFirestore, collection, getDocs, addDoc, query, where, orderBy,
+    getFirestore, collection, doc, getDocs, setDoc, addDoc, query, where, orderBy,
     limit, onSnapshot, serverTimestamp, Timestamp,
   } = await import(`https://www.gstatic.com/firebasejs/${VERSION}/firebase-firestore.js`);
 
@@ -42,6 +43,12 @@ async function crearMotorFirebase() {
       const resultado = await getDocs(collection(db, "paraderos"));
       // El id del documento ES el código del paradero (ej: "481A00")
       return resultado.docs.map((doc) => ({ codigo: doc.id, ...doc.data() }));
+    },
+
+    async guardarParadero({ codigo, nombre, lat, lng }) {
+      // setDoc con un id fijo: si el paradero ya existe, lo reemplaza
+      // (por eso se puede sembrar varias veces sin duplicar).
+      await setDoc(doc(db, "paraderos", codigo), { nombre, lat, lng });
     },
 
     async crearReporte({ paraderoId, categoria, descripcion }) {
@@ -111,7 +118,11 @@ function crearMotorDemo() {
 
   return {
     async obtenerParaderos() {
-      return PARADEROS_DEMO;
+      return PARADEROS_SEMILLA;
+    },
+
+    async guardarParadero() {
+      throw new Error("Estás en modo demo: primero pega tu configuración en js/config.js.");
     },
 
     async crearReporte({ paraderoId, categoria, descripcion }) {

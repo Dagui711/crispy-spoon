@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sembrar paraderos · Paradero Seguro</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <header class="encabezado">
+    <h1>Sembrar paraderos</h1>
+    <p class="subtitulo">Página de un solo uso para crear los paraderos en Firestore</p>
+  </header>
+
+  <main>
+    <div class="tarjeta">
+      <p>
+        Crea (o actualiza) un documento en la colección <code>paraderos</code>
+        por cada paradero de <code>js/catalogos.js</code>:
+      </p>
+      <ul id="lista"></ul>
+      <p class="mensaje-error">
+        Solo funciona mientras Firestore esté en <strong>modo de prueba</strong>.
+        Después de sembrar, publica las reglas de <code>firestore.rules</code>:
+        desde ese momento esta página ya no podrá escribir, y eso es lo correcto.
+      </p>
+      <button id="boton-sembrar" class="boton-principal">Crear paraderos</button>
+      <pre id="registro"></pre>
+    </div>
+  </main>
+
+  <script type="module">
+    import { PARADEROS_SEMILLA } from "./js/catalogos.js";
+
+    const registro = document.getElementById("registro");
+    const anotar = (texto) => (registro.textContent += texto + "\n");
+
+    // Mostramos qué se va a crear antes de hacerlo
+    for (const p of PARADEROS_SEMILLA) {
+      const li = document.createElement("li");
+      li.textContent = `${p.codigo} · ${p.nombre} (${p.lat}, ${p.lng})`;
+      document.getElementById("lista").appendChild(li);
+    }
+
+    document.getElementById("boton-sembrar").addEventListener("click", async () => {
+      const boton = document.getElementById("boton-sembrar");
+      boton.disabled = true;
+      registro.textContent = "";
+      try {
+        // Importamos aquí (y no arriba) para que, si falla la conexión
+        // con Firebase, el error se vea en pantalla.
+        const { motor } = await import("./js/datos.js");
+        let errores = 0;
+        for (const p of PARADEROS_SEMILLA) {
+          try {
+            await motor.guardarParadero(p);
+            anotar(`✔ ${p.codigo} - ${p.nombre}`);
+          } catch (e) {
+            errores++;
+            anotar(`✘ ${p.codigo}: ${e.message}`);
+          }
+        }
+        anotar(errores === 0
+          ? "Listo. Ahora publica las reglas (firestore.rules) y abre index.html."
+          : "Hubo errores. Revisa que Firestore esté en modo de prueba.");
+      } catch (e) {
+        anotar(`✘ No se pudo conectar con Firebase: ${e.message}`);
+      } finally {
+        boton.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -49,8 +49,9 @@ crispy-spoon/
 │   ├── app.js          ← lógica principal: formulario, lista, pestañas
 │   ├── datos.js        ← ÚNICO archivo que habla con la base de datos
 │   ├── mapa.js         ← todo lo del mapa (Leaflet)
-│   ├── catalogos.js    ← datos fijos: categorías y paraderos (modo demo)
+│   ├── catalogos.js    ← datos fijos: categorías y lista semilla de paraderos
 │   └── config.js       ← configuración de Firebase (la pegas tú)
+├── sembrar.html        ← página de un solo uso: crea los paraderos en Firestore
 ├── firestore.rules     ← reglas de seguridad de la base de datos
 ├── firebase.json       ← configuración para publicar con Firebase
 └── docs/
