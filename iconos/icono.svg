@@ -1,12 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Fondo rojo (todo el cuadro, para que funcione como ícono "maskable") -->
-  <rect width="512" height="512" fill="#c8102e"/>
-  <!-- Señal de paradero: poste y letrero -->
-  <rect x="242" y="250" width="28" height="170" rx="8" fill="#ffffff"/>
-  <rect x="146" y="104" width="220" height="160" rx="28" fill="#ffffff"/>
-  <!-- Signo de alerta dentro del letrero -->
-  <rect x="242" y="130" width="28" height="78" rx="14" fill="#c8102e"/>
-  <circle cx="256" cy="234" r="16" fill="#c8102e"/>
-  <!-- Base -->
-  <rect x="196" y="410" width="120" height="22" rx="11" fill="#ffffff"/>
+  <!-- Fondo negro (todo el cuadro, para que funcione como ícono "maskable") -->
+  <rect width="512" height="512" fill="#0D1117"/>
+  <!-- Poste y base de la señal -->
+  <rect x="243" y="300" width="26" height="128" rx="6" fill="#FFFFFF"/>
+  <rect x="200" y="414" width="112" height="20" rx="10" fill="#FFFFFF"/>
+  <!-- Placa ámbar de seguridad con filete interior negro, como una señal reflectiva -->
+  <rect x="136" y="96" width="240" height="214" rx="34" fill="#FFC20E"/>
+  <rect x="150" y="110" width="212" height="186" rx="23" fill="none" stroke="#0D1117" stroke-width="8"/>
+  <!-- Escudo con chulo: ícono "shield-check" de Lucide (licencia ISC) -->
+  <g transform="translate(181.6 128.6) scale(6.2)" fill="none" stroke="#0D1117" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>
+    <path d="m9 12 2 2 4-4"/>
+  </g>
 </svg>

@@ -7,12 +7,15 @@
 // "id" es lo que se guarda en la base de datos (sin tildes ni espacios);
 // "nombre" e "icono" son solo para mostrar en pantalla.
 // ⚠️ Si agregas una categoría aquí, agrégala también en firestore.rules.
+// "svg" es el nombre del ícono (Lucide) dentro del sprite de index.html:
+// la interfaz lo dibuja con <svg><use href="#i-..."/></svg>. El emoji se
+// sigue usando en los mensajes de WhatsApp.
 export const CATEGORIAS = [
-  { id: "hurto",       nombre: "Hurto o robo",          icono: "🚨" },
-  { id: "alumbrado",   nombre: "Alumbrado apagado",     icono: "💡" },
-  { id: "zona_oscura", nombre: "Zona oscura",           icono: "🌑" },
-  { id: "acoso",       nombre: "Acoso o inseguridad",   icono: "⚠️" },
-  { id: "otro",        nombre: "Otro",                  icono: "📝" },
+  { id: "hurto",       nombre: "Hurto o robo",          icono: "🚨", svg: "siren" },
+  { id: "alumbrado",   nombre: "Alumbrado apagado",     icono: "💡", svg: "lightbulb-off" },
+  { id: "zona_oscura", nombre: "Zona oscura",           icono: "🌑", svg: "moon" },
+  { id: "acoso",       nombre: "Acoso o inseguridad",   icono: "⚠️", svg: "triangle-alert" },
+  { id: "otro",        nombre: "Otro",                  icono: "📝", svg: "message-square-more" },
 ];
 
 // Busca una categoría por su id. Si no existe devuelve una genérica.

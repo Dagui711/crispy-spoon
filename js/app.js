@@ -21,6 +21,14 @@ let hayMapa = false;
 
 const nombreParadero = (codigo) => paraderos.find((p) => p.codigo === codigo)?.nombre ?? codigo;
 
+// --- Ayudas de presentación (no cambian datos) ---
+// Ícono del sprite de index.html. "nombre" siempre viene de nuestro código
+// (catalogos.js), nunca de lo que escribe el usuario.
+const icono = (nombre) => `<svg class="ico" aria-hidden="true"><use href="#i-${nombre}"/></svg>`;
+// Algunos nombres ya traen el código ("U. Jorge Tadeo Lozano 481A00"); como el
+// código se muestra aparte en su "placa", aquí se quita para no repetirlo.
+const nombreSinCodigo = (codigo) => nombreParadero(codigo).replace(codigo, "").trim();
+
 // ------------------------------------------------------------
 // 1. Pestañas
 // ------------------------------------------------------------
@@ -46,7 +54,8 @@ function temaActual() {
 
 function pintarBotonTema() {
   const noche = temaActual() === "noche";
-  $("boton-tema").textContent = noche ? "☀️" : "🌙";
+  $("boton-tema").innerHTML =
+    `${icono(noche ? "sun" : "moon")}<span class="tema-texto">${noche ? "Modo claro" : "Modo noche"}</span>`;
   $("boton-tema").setAttribute("aria-label", noche ? "Cambiar a modo claro" : "Cambiar a modo noche");
 }
 
@@ -68,7 +77,9 @@ function pintarCategorias() {
     boton.type = "button"; // para que no envíe el formulario
     boton.className = "categoria";
     boton.dataset.id = cat.id;
-    boton.innerHTML = `<span class="icono">${cat.icono}</span>${cat.nombre}`;
+    boton.setAttribute("aria-pressed", "false");
+    boton.innerHTML = `<span class="placa-categoria" aria-hidden="true">${icono(cat.svg)}</span>` +
+      `<span class="categoria-nombre">${cat.nombre}</span>`;
     boton.addEventListener("click", () => elegirCategoria(cat.id));
     contenedor.appendChild(boton);
   }
@@ -76,8 +87,10 @@ function pintarCategorias() {
 
 function elegirCategoria(id) {
   categoriaElegida = id;
-  document.querySelectorAll(".categoria").forEach((b) =>
-    b.classList.toggle("seleccionada", b.dataset.id === id));
+  document.querySelectorAll(".categoria").forEach((b) => {
+    b.classList.toggle("seleccionada", b.dataset.id === id);
+    b.setAttribute("aria-pressed", String(b.dataset.id === id));
+  });
   // Si eligen "Otro", la descripción se vuelve obligatoria
   $("descripcion-opcional").textContent = id === "otro" ? "(obligatoria)" : "(opcional)";
 }
@@ -88,7 +101,8 @@ function pintarParaderos() {
   for (const p of paraderos) {
     const opcion = document.createElement("option");
     opcion.value = p.codigo;
-    opcion.textContent = `${p.nombre} (${p.codigo})`;
+    // Código primero, como en la placa del paradero (sin repetirlo si ya está en el nombre)
+    opcion.textContent = `${p.codigo} · ${p.nombre.replace(p.codigo, "").trim() || p.nombre}`;
     select.appendChild(opcion);
   }
 
@@ -164,7 +178,7 @@ function textoParaCompartir(paraderoId, categoria, cuando) {
 
 function mostrarConfirmacion(paraderoId, categoria) {
   const hora = new Date().toLocaleTimeString("es-CO", { hour: "numeric", minute: "2-digit" });
-  $("conf-paradero").textContent = `${nombreParadero(paraderoId)} (${paraderoId})`;
+  $("conf-paradero").textContent = `${paraderoId} · ${nombreSinCodigo(paraderoId) || nombreParadero(paraderoId)}`;
   $("conf-hora").textContent = hora;
   $("conf-categoria").textContent = categoriaPorId(categoria).nombre;
   $("boton-whatsapp").href = enlaceWhatsApp(textoParaCompartir(paraderoId, categoria, `hoy a las ${hora}`));
@@ -176,7 +190,10 @@ function reiniciarFormulario() {
   $("form-reporte").reset();
   $("contador-caracteres").textContent = "0";
   categoriaElegida = null;
-  document.querySelectorAll(".categoria").forEach((b) => b.classList.remove("seleccionada"));
+  document.querySelectorAll(".categoria").forEach((b) => {
+    b.classList.remove("seleccionada");
+    b.setAttribute("aria-pressed", "false");
+  });
   $("descripcion-opcional").textContent = "(opcional)";
   mostrarError(null);
   pintarParaderos(); // vuelve a aplicar la preselección del QR, si la hay
@@ -212,28 +229,38 @@ function pintarListaReportes() {
 
     const li = document.createElement("li");
     li.className = `reporte estado-${estado.id}`;
+    li.dataset.categoria = r.categoria; // solo para el color de la placa (CSS)
     li.innerHTML = `
-      <div class="reporte-cabecera">
-        <span class="reporte-categoria"></span>
-        <span class="reporte-tiempo"></span>
-      </div>
-      <div class="reporte-paradero"></div>
-      <p class="reporte-descripcion"></p>
-      <div class="chips">
-        <span class="chip chip-estado"></span>
-        <span class="chip chip-frescura"></span>
+      <span class="placa-categoria reporte-placa" aria-hidden="true">${icono(cat.svg ?? "message-square-more")}</span>
+      <div class="reporte-cuerpo">
+        <div class="reporte-cabecera">
+          <div class="reporte-titulo">
+            <span class="reporte-categoria"></span>
+            <span class="reporte-tiempo"></span>
+          </div>
+          <a class="boton-compartir" target="_blank" rel="noopener" aria-label="Compartir por WhatsApp" title="Compartir por WhatsApp">${icono("whatsapp")}</a>
+        </div>
+        <div class="reporte-lugar">
+          <span class="placa-codigo"></span>
+          <span class="reporte-paradero"></span>
+        </div>
+        <p class="reporte-descripcion"></p>
+        <div class="chips">
+          <span class="chip chip-estado"></span>
+          <span class="chip chip-frescura"></span>
+        </div>
       </div>
       <div class="acciones-reporte">
-        <button type="button" class="boton-voto" data-tipo="vigente">👀 Sigue así</button>
-        <button type="button" class="boton-voto" data-tipo="resuelto">✅ Ya se resolvió</button>
-        <a class="boton-compartir" target="_blank" rel="noopener" aria-label="Compartir por WhatsApp">Compartir</a>
+        <button type="button" class="boton-voto" data-tipo="vigente">Sigue así</button>
+        <button type="button" class="boton-voto" data-tipo="resuelto">Ya se resolvió</button>
       </div>`;
     // Usamos textContent (no innerHTML) para el texto que escribió el usuario:
     // así, si alguien escribe código HTML malicioso, se muestra como texto y no se ejecuta.
-    li.querySelector(".reporte-categoria").textContent = `${cat.icono} ${cat.nombre}`;
+    li.querySelector(".reporte-categoria").textContent = cat.nombre;
     li.querySelector(".reporte-tiempo").textContent = tiempoRelativo(r.creadoEn);
     li.querySelector(".reporte-tiempo").title = r.creadoEn.toLocaleString("es-CO");
-    li.querySelector(".reporte-paradero").textContent = nombreParadero(r.paraderoId);
+    li.querySelector(".placa-codigo").textContent = r.paraderoId;
+    li.querySelector(".reporte-paradero").textContent = nombreSinCodigo(r.paraderoId);
     const desc = li.querySelector(".reporte-descripcion");
     if (r.descripcion) desc.textContent = r.descripcion;
     else desc.remove();
