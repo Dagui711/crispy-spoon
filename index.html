@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paradero Seguro · Tadeo</title>
+  <meta name="description" content="Reporta incidentes de inseguridad en los paraderos del SITP cercanos a la Universidad Jorge Tadeo Lozano.">
+
+  <!-- Leaflet: la librería del mapa (hoja de estilos + código) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+  <!-- Nuestros estilos -->
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <header class="encabezado">
+    <h1>Paradero Seguro</h1>
+    <p class="subtitulo">Paraderos SITP · Universidad Jorge Tadeo Lozano</p>
+    <p id="aviso-modo" class="aviso-modo" hidden></p>
+  </header>
+
+  <!-- Pestañas de navegación -->
+  <nav class="pestanas" aria-label="Secciones">
+    <button class="pestana activa" data-seccion="reportar">Reportar</button>
+    <button class="pestana" data-seccion="recientes">Recientes</button>
+    <button class="pestana" data-seccion="mapa">Mapa</button>
+  </nav>
+
+  <main>
+    <!-- ========== SECCIÓN 1: REPORTAR ========== -->
+    <section id="reportar" class="seccion activa">
+      <form id="form-reporte" class="tarjeta" novalidate>
+        <h2>Reportar incidente</h2>
+
+        <label for="campo-paradero">Paradero</label>
+        <select id="campo-paradero" required>
+          <option value="">Cargando paraderos…</option>
+        </select>
+
+        <fieldset>
+          <legend>¿Qué está pasando?</legend>
+          <div class="categorias" id="lista-categorias">
+            <!-- Los botones de categoría se crean desde app.js -->
+          </div>
+        </fieldset>
+
+        <label for="campo-descripcion">
+          Descripción <span id="descripcion-opcional" class="nota">(opcional)</span>
+        </label>
+        <textarea id="campo-descripcion" maxlength="280" rows="3"
+          placeholder="Ej: la luminaria del costado norte lleva 3 días apagada"></textarea>
+        <p class="nota contador"><span id="contador-caracteres">0</span>/280</p>
+
+        <p id="mensaje-error" class="mensaje-error" role="alert" hidden></p>
+
+        <button type="submit" id="boton-enviar" class="boton-principal">Enviar reporte</button>
+        <p class="nota">Tu reporte es anónimo: no pedimos nombre, correo ni ubicación.</p>
+      </form>
+
+      <!-- Pantalla de confirmación (como en el prototipo de Figma) -->
+      <div id="confirmacion" class="tarjeta confirmacion" hidden>
+        <div class="check" aria-hidden="true">✓</div>
+        <h2>¡Reporte enviado!</h2>
+        <dl class="resumen">
+          <dt>Paradero</dt><dd id="conf-paradero"></dd>
+          <dt>Hora</dt><dd id="conf-hora"></dd>
+          <dt>Categoría</dt><dd id="conf-categoria"></dd>
+        </dl>
+        <button id="boton-otro" class="boton-secundario">Hacer otro reporte</button>
+        <button id="boton-ver-mapa" class="boton-secundario">Ver mapa</button>
+      </div>
+    </section>
+
+    <!-- ========== SECCIÓN 2: REPORTES RECIENTES ========== -->
+    <section id="recientes" class="seccion">
+      <div class="tarjeta">
+        <h2>Reportes recientes</h2>
+        <p class="nota">Últimos 7 días · se actualiza solo</p>
+        <ul id="lista-reportes" class="lista-reportes">
+          <li class="vacio">Cargando…</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ========== SECCIÓN 3: MAPA ========== -->
+    <section id="mapa" class="seccion">
+      <div class="tarjeta">
+        <h2>Mapa de paraderos</h2>
+        <p class="nota">Color según la cantidad de reportes en los últimos 7 días</p>
+        <div id="contenedor-mapa"></div>
+        <ul class="leyenda">
+          <li><span class="punto nivel-0"></span>0</li>
+          <li><span class="punto nivel-1"></span>1–2</li>
+          <li><span class="punto nivel-2"></span>3–5</li>
+          <li><span class="punto nivel-3"></span>6 o más</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <!-- type="module" nos permite usar "import" entre archivos JS -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
