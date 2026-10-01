@@ -114,6 +114,8 @@ select, textarea {
   cursor: pointer;
   color: var(--texto);
 }
+/* Si queda una categoría sola en la última fila, que ocupe todo el ancho */
+.categoria:last-child:nth-child(odd) { grid-column: 1 / -1; }
 .categoria .icono { display: block; font-size: 1.6rem; margin-bottom: 4px; }
 .categoria.seleccionada {
   border-color: var(--primario);

@@ -44,8 +44,8 @@ un botón, a partir de la lista `PARADEROS_SEMILLA` de [`js/catalogos.js`](../js
 |---------------------|--------------------------------|---------------------|----------------------|
 | `481A00`            | `U. Jorge Tadeo Lozano 481A00` | `4.607891187072479` | `-74.06873441620392` |
 | `504A00`            | `U. Jorge Tadeo Lozano 504A00` | `4.606975419584897` | `-74.06745538416442` |
-| `LAS_NIEVES`        | `Br. Las Nieves`               | `4.608110479244784` | `-74.06717069923171` |
-| `EST_UNIVERSIDADES` | `Estación Universidades`       | `4.605146708561095` | `-74.06722341866632` |
+| `113A00`            | `Br. Las Nieves`               | `4.608110479244784` | `-74.06717069923171` |
+| `664A00`            | `Estación Universidades`       | `4.605146708561095` | `-74.06722341866632` |
 
 Si sale ✘ con `PERMISSION_DENIED`, la base no está en modo de prueba: en la pestaña
 **Reglas** pega temporalmente esto, publica, siembra y sigue con el paso 5:
