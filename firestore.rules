@@ -34,7 +34,7 @@ service cloud.firestore {
         && d.paraderoId is string
         && exists(/databases/$(database)/documents/paraderos/$(d.paraderoId))
         // Solo categorías conocidas (igual que en js/catalogos.js)
-        && d.categoria in ['alumbrado', 'zona_oscura', 'acoso', 'otro']
+        && d.categoria in ['hurto', 'alumbrado', 'zona_oscura', 'acoso', 'otro']
         // Descripción: texto de máximo 280 caracteres (puede ir vacía)
         && d.descripcion is string
         && d.descripcion.size() <= 280

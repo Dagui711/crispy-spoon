@@ -13,23 +13,21 @@ paraderos (colección)                reportes (colección)
 │   ├── lat: 4.6078911…              │   ├── categoria: "alumbrado"  │ relación:
 │   └── lng: -74.0687344…            │   ├── descripcion: "…"        │ apunta al id
 ├── 504A00                           │   └── creadoEn: 1 oct 2026…   │ del paradero
-├── LAS_NIEVES                       └── …                           │
-└── EST_UNIVERSIDADES  ◄─────────────────────────────────────────────┘
+├── 113A00                           └── …                           │
+└── 664A00  ◄────────────────────────────────────────────────────────┘
 ```
 
 ## Colección `paraderos`
 
 El **id del documento es el código SITP** del paradero (ej. `481A00`). Así no hace
 falta un campo extra para el código y la relación con los reportes es directa.
-Br. Las Nieves y Estación Universidades usan un id descriptivo (`LAS_NIEVES`,
-`EST_UNIVERSIDADES`) porque no registramos su código SITP.
 
 | ID                  | Nombre                       | lat                 | lng                  |
 |---------------------|------------------------------|---------------------|----------------------|
 | `481A00`            | U. Jorge Tadeo Lozano 481A00 | 4.607891187072479   | -74.06873441620392   |
 | `504A00`            | U. Jorge Tadeo Lozano 504A00 | 4.606975419584897   | -74.06745538416442   |
-| `LAS_NIEVES`        | Br. Las Nieves               | 4.608110479244784   | -74.06717069923171   |
-| `EST_UNIVERSIDADES` | Estación Universidades       | 4.605146708561095   | -74.06722341866632   |
+| `113A00`            | Br. Las Nieves               | 4.608110479244784   | -74.06717069923171   |
+| `664A00`            | Estación Universidades       | 4.605146708561095   | -74.06722341866632   |
 
 | Campo    | Tipo   | Ejemplo             | Descripción                         |
 |----------|--------|---------------------|-------------------------------------|
@@ -46,7 +44,7 @@ Cada reporte es un documento con **id automático** (Firestore lo inventa).
 | Campo         | Tipo      | Valores permitidos                                  |
 |---------------|-----------|-----------------------------------------------------|
 | `paraderoId`  | string    | id de un documento que exista en `paraderos`        |
-| `categoria`   | string    | `alumbrado`, `zona_oscura`, `acoso`, `otro`         |
+| `categoria`   | string    | `hurto`, `alumbrado`, `zona_oscura`, `acoso`, `otro` |
 | `descripcion` | string    | texto de 0 a 280 caracteres (puede ir vacío)        |
 | `creadoEn`    | timestamp | hora del **servidor** en el momento de crear        |
 
