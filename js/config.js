@@ -26,3 +26,14 @@ export const usarFirebase = firebaseConfig.apiKey !== "";
 
 // Cuántos días hacia atrás mostramos en la lista y en el mapa
 export const DIAS_RECIENTES = 7;
+
+// El resumen semanal compara esta semana con la anterior, así que
+// descargamos 2 semanas de reportes.
+export const DIAS_HISTORIAL = 14;
+
+// Anti-spam: minutos de espera entre reportes de un mismo celular.
+// ⚠️ Debe coincidir con duration.value(2, 'm') en firestore.rules.
+export const ESPERA_MINUTOS = 2;
+
+// Dirección pública de la app (para los QR y los mensajes de WhatsApp)
+export const URL_PUBLICA = "https://dagui711.github.io/crispy-spoon/";

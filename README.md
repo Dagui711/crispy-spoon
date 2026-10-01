@@ -5,9 +5,9 @@ Universidad Jorge Tadeo Lozano (Bogotá). Es el proyecto de aula de Ingeniería 
 (nocturna, primer semestre) del grupo: Luisa Tovar, Catalina Moreno, Samir Quintero,
 Ángel Parra, Camilo Montaña y Rafael Daniel Aguilera Gamez.
 
-**Estado:** Fase 1 (MVP), para pruebas internas del equipo.
+**En línea:** <https://dagui711.github.io/crispy-spoon/> (pruebas internas del equipo).
 
-| Funcionalidad del MVP                         | Estado |
+| Fase 1 (MVP)                                  | Estado |
 |-----------------------------------------------|--------|
 | Reportar incidente (paradero + categoría)     | ✅ |
 | Confirmación (paradero, hora, categoría)      | ✅ |
@@ -15,6 +15,19 @@ Universidad Jorge Tadeo Lozano (Bogotá). Es el proyecto de aula de Ingeniería 
 | Mapa con paraderos coloreados por reportes    | ✅ |
 | Sin login (anónimo)                           | ✅ |
 | Abrir desde QR con paradero preseleccionado   | ✅ (`?paradero=481A00`) |
+
+| Fase 2                                        | Estado |
+|-----------------------------------------------|--------|
+| Mapa de calor                                 | ✅ |
+| Instalable como app (PWA), abre sin conexión  | ✅ |
+| Confirmación comunitaria ("sigue así" / "ya se resolvió") | ✅ |
+| Anti-spam: 1 reporte cada 2 min por celular   | ✅ |
+| Botón de emergencia (123, 155, ubicación por WhatsApp) | ✅ |
+| Compartir reportes por WhatsApp               | ✅ |
+| Resumen semanal y patrones por hora / franja  | ✅ |
+| Indicador de transparencia (confirmaciones y antigüedad) | ✅ |
+| Modo noche de alto contraste                  | ✅ |
+| Cómo llegar y CAI cercano (Google Maps)       | ✅ |
 
 ## Cómo probarla en tu computador
 
@@ -46,12 +59,17 @@ crispy-spoon/
 ├── css/
 │   └── estilos.css     ← colores, tamaños y diseño
 ├── js/
-│   ├── app.js          ← lógica principal: formulario, lista, pestañas
+│   ├── app.js          ← lógica principal: formulario, lista, pestañas, SOS, tema
 │   ├── datos.js        ← ÚNICO archivo que habla con la base de datos
-│   ├── mapa.js         ← todo lo del mapa (Leaflet)
+│   ├── analisis.js     ← cálculos: franjas, transparencia, resumen semanal
+│   ├── resumen.js      ← pestaña Resumen (gráficos de barras)
+│   ├── mapa.js         ← todo lo del mapa (Leaflet + mapa de calor)
 │   ├── catalogos.js    ← datos fijos: categorías y lista semilla de paraderos
 │   └── config.js       ← configuración de Firebase (la pegas tú)
 ├── sembrar.html        ← página de un solo uso: crea los paraderos en Firestore
+├── sw.js               ← service worker (PWA: instalar y abrir sin conexión)
+├── manifest.webmanifest← nombre, colores e íconos de la app instalada
+├── iconos/             ← ícono de la app
 ├── firestore.rules     ← reglas de seguridad de la base de datos
 ├── firebase.json       ← configuración para publicar con Firebase
 └── docs/
@@ -76,9 +94,7 @@ lo guarda y avisa a todos los que tienen la app abierta → `app.js` repinta la 
 - **Firebase Firestore**: base de datos en la nube, en tiempo real.
 - **Leaflet** + **OpenStreetMap**: mapa gratuito y de código abierto.
 
-## Próximos pasos (Fase 2)
+## Pendientes
 
-Mapa de calor real · instalación como PWA · confirmación comunitaria de reportes ·
-anti-spam (throttle) · botón de emergencia · compartir por WhatsApp · resumen semanal
-y patrones por hora · indicador de transparencia · modo oscuro de alto contraste ·
-CAI cercano / cómo llegar.
+- Agregar CAI verificados en `CAIS` (`js/catalogos.js`) para que aparezcan en el mapa.
+- QR de los 4 paraderos.

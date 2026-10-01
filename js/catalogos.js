@@ -36,3 +36,11 @@ export const PARADEROS_SEMILLA = [
 
 // Centro del mapa: punto medio entre los 4 paraderos.
 export const CENTRO_MAPA = [4.6068, -74.0677];
+
+// CAI (Comandos de Atención Inmediata de la Policía) que se muestran en el mapa.
+// ⚠️ Agreguen solo CAI verificados: busquen "CAI" en Google Maps cerca de la
+//    Tadeo, confirmen que existe, y copien sus coordenadas (clic derecho).
+// Mientras esta lista esté vacía, el mapa ofrece "Buscar CAI cercano",
+// que abre Google Maps buscando CAI alrededor del paradero.
+// Ejemplo:  { nombre: "CAI …", lat: 4.60…, lng: -74.06… },
+export const CAIS = [];

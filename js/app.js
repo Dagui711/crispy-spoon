@@ -1,16 +1,25 @@
 // ============================================================
 // Lógica principal: conecta la pantalla (HTML) con los datos y el mapa.
 // ============================================================
-import { motor, modoDemo } from "./datos.js";
-import { CATEGORIAS, categoriaPorId } from "./catalogos.js";
-import { crearMapa, actualizarColores, refrescarTamano } from "./mapa.js";
+import { motor, modoDemo, EsperaError } from "./datos.js";
+import { CATEGORIAS, CAIS, categoriaPorId } from "./catalogos.js";
+import { URL_PUBLICA } from "./config.js";
+import { crearMapa, actualizarMapa, cambiarVista, calorDisponible, refrescarTamano } from "./mapa.js";
+import {
+  tiempoRelativo, estadoReporte, frescura, estaActivo, contarPor, resumenTransparencia,
+} from "./analisis.js";
+import { pintarResumen } from "./resumen.js";
 
 // Atajo para buscar elementos por id
 const $ = (id) => document.getElementById(id);
 
-// Estado de la app (lo que el usuario ha elegido)
+// Estado de la app
 let categoriaElegida = null;
 let paraderos = [];
+let reportes = [];     // historial completo (2 semanas), del más nuevo al más viejo
+let hayMapa = false;
+
+const nombreParadero = (codigo) => paraderos.find((p) => p.codigo === codigo)?.nombre ?? codigo;
 
 // ------------------------------------------------------------
 // 1. Pestañas
@@ -27,7 +36,30 @@ document.querySelectorAll(".pestana").forEach((boton) =>
   boton.addEventListener("click", () => mostrarSeccion(boton.dataset.seccion)));
 
 // ------------------------------------------------------------
-// 2. Formulario de reporte
+// 2. Modo noche (alto contraste)
+// ------------------------------------------------------------
+// Si la persona no ha elegido, se sigue la configuración del celular.
+function temaActual() {
+  return document.documentElement.dataset.tema
+    ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "noche" : "claro");
+}
+
+function pintarBotonTema() {
+  const noche = temaActual() === "noche";
+  $("boton-tema").textContent = noche ? "☀️" : "🌙";
+  $("boton-tema").setAttribute("aria-label", noche ? "Cambiar a modo claro" : "Cambiar a modo noche");
+}
+
+$("boton-tema").addEventListener("click", () => {
+  const nuevo = temaActual() === "noche" ? "claro" : "noche";
+  document.documentElement.dataset.tema = nuevo;
+  try { localStorage.setItem("paradero-seguro-tema", nuevo); } catch {}
+  pintarBotonTema();
+});
+pintarBotonTema();
+
+// ------------------------------------------------------------
+// 3. Formulario de reporte
 // ------------------------------------------------------------
 function pintarCategorias() {
   const contenedor = $("lista-categorias");
@@ -100,20 +132,42 @@ async function enviarReporte(evento) {
     await motor.crearReporte({ paraderoId, categoria: categoriaElegida, descripcion });
     mostrarConfirmacion(paraderoId, categoriaElegida);
   } catch (e) {
-    console.error(e);
-    mostrarError("No se pudo enviar el reporte. Revisa tu conexión e intenta de nuevo.");
+    if (e instanceof EsperaError) {
+      // No es un error del sistema: es el anti-spam funcionando
+      const min = Math.floor(e.segundos / 60);
+      const seg = e.segundos % 60;
+      const tiempo = [min > 0 ? `${min} min` : "", seg > 0 ? `${seg} s` : ""].filter(Boolean).join(" ");
+      mostrarError(`Para evitar reportes repetidos, espera ${tiempo} antes de enviar otro.`);
+    } else if (e.message.includes("Anónimo")) {
+      console.error(e);
+      mostrarError(e.message);
+    } else {
+      console.error(e);
+      mostrarError("No se pudo enviar el reporte. Revisa tu conexión e intenta de nuevo.");
+    }
   } finally {
     boton.disabled = false;
     boton.textContent = "Enviar reporte";
   }
 }
 
+// Enlace de WhatsApp con el texto ya escrito (la persona elige a quién enviarlo)
+function enlaceWhatsApp(texto) {
+  return `https://wa.me/?text=${encodeURIComponent(texto)}`;
+}
+
+function textoParaCompartir(paraderoId, categoria, cuando) {
+  const cat = categoriaPorId(categoria);
+  return `⚠️ ${cat.icono} ${cat.nombre} en el paradero ${nombreParadero(paraderoId)} (${paraderoId}), ${cuando}\n` +
+    `Mira los reportes o confirma si sigue: ${URL_PUBLICA}?paradero=${paraderoId}`;
+}
+
 function mostrarConfirmacion(paraderoId, categoria) {
-  const p = paraderos.find((x) => x.codigo === paraderoId);
-  $("conf-paradero").textContent = p ? `${p.nombre} (${p.codigo})` : paraderoId;
-  $("conf-hora").textContent = new Date().toLocaleTimeString("es-CO",
-    { hour: "numeric", minute: "2-digit" });
+  const hora = new Date().toLocaleTimeString("es-CO", { hour: "numeric", minute: "2-digit" });
+  $("conf-paradero").textContent = `${nombreParadero(paraderoId)} (${paraderoId})`;
+  $("conf-hora").textContent = hora;
   $("conf-categoria").textContent = categoriaPorId(categoria).nombre;
+  $("boton-whatsapp").href = enlaceWhatsApp(textoParaCompartir(paraderoId, categoria, `hoy a las ${hora}`));
   $("form-reporte").hidden = true;
   $("confirmacion").hidden = false;
 }
@@ -124,69 +178,154 @@ function reiniciarFormulario() {
   categoriaElegida = null;
   document.querySelectorAll(".categoria").forEach((b) => b.classList.remove("seleccionada"));
   $("descripcion-opcional").textContent = "(opcional)";
+  mostrarError(null);
   pintarParaderos(); // vuelve a aplicar la preselección del QR, si la hay
   $("confirmacion").hidden = true;
   $("form-reporte").hidden = false;
 }
 
 // ------------------------------------------------------------
-// 3. Lista de reportes recientes
+// 4. Lista de reportes recientes (con confirmación comunitaria)
 // ------------------------------------------------------------
-
-// "hace 5 min", "hace 2 h", "hace 3 días"
-function tiempoRelativo(fecha) {
-  const minutos = Math.floor((Date.now() - fecha) / 60000);
-  if (minutos < 1) return "ahora";
-  if (minutos < 60) return `hace ${minutos} min`;
-  const horas = Math.floor(minutos / 60);
-  if (horas < 24) return `hace ${horas} h`;
-  const dias = Math.floor(horas / 24);
-  return `hace ${dias} día${dias === 1 ? "" : "s"}`;
+function textoTransparencia() {
+  const t = resumenTransparencia(reportes);
+  if (!t.ultimo) return "Todavía no hay reportes.";
+  return `${t.activos} reporte${t.activos === 1 ? "" : "s"} activo${t.activos === 1 ? "" : "s"} · ` +
+    `${t.confirmados} confirmado${t.confirmados === 1 ? "" : "s"} por la comunidad · ` +
+    `último ${tiempoRelativo(t.ultimo)}`;
 }
 
-function pintarListaReportes(reportes) {
+function pintarListaReportes() {
   const lista = $("lista-reportes");
+  const recientes = reportes.filter((r) => Date.now() - r.creadoEn < 7 * 24 * 60 * 60 * 1000);
+  const votos = motor.misVotos();
   lista.innerHTML = "";
-  if (reportes.length === 0) {
+  if (recientes.length === 0) {
     lista.innerHTML = '<li class="vacio">Aún no hay reportes. ¡Sé el primero!</li>';
     return;
   }
-  for (const r of reportes.slice(0, 30)) {
+  for (const r of recientes.slice(0, 40)) {
     const cat = categoriaPorId(r.categoria);
-    const p = paraderos.find((x) => x.codigo === r.paraderoId);
+    const estado = estadoReporte(r);
+    const fresco = frescura(r);
+    const miVoto = votos[r.id];
+
     const li = document.createElement("li");
+    li.className = `reporte estado-${estado.id}`;
     li.innerHTML = `
       <div class="reporte-cabecera">
         <span class="reporte-categoria"></span>
         <span class="reporte-tiempo"></span>
       </div>
       <div class="reporte-paradero"></div>
-      <p class="reporte-descripcion"></p>`;
+      <p class="reporte-descripcion"></p>
+      <div class="chips">
+        <span class="chip chip-estado"></span>
+        <span class="chip chip-frescura"></span>
+      </div>
+      <div class="acciones-reporte">
+        <button type="button" class="boton-voto" data-tipo="vigente">👀 Sigue así</button>
+        <button type="button" class="boton-voto" data-tipo="resuelto">✅ Ya se resolvió</button>
+        <a class="boton-compartir" target="_blank" rel="noopener" aria-label="Compartir por WhatsApp">Compartir</a>
+      </div>`;
     // Usamos textContent (no innerHTML) para el texto que escribió el usuario:
     // así, si alguien escribe código HTML malicioso, se muestra como texto y no se ejecuta.
     li.querySelector(".reporte-categoria").textContent = `${cat.icono} ${cat.nombre}`;
     li.querySelector(".reporte-tiempo").textContent = tiempoRelativo(r.creadoEn);
     li.querySelector(".reporte-tiempo").title = r.creadoEn.toLocaleString("es-CO");
-    li.querySelector(".reporte-paradero").textContent = p ? p.nombre : r.paraderoId;
+    li.querySelector(".reporte-paradero").textContent = nombreParadero(r.paraderoId);
     const desc = li.querySelector(".reporte-descripcion");
     if (r.descripcion) desc.textContent = r.descripcion;
     else desc.remove();
+    li.querySelector(".chip-estado").textContent = estado.texto;
+    li.querySelector(".chip-frescura").textContent = fresco.texto;
+    li.querySelector(".chip-frescura").classList.add(`frescura-${fresco.id}`);
+    li.querySelector(".boton-compartir").href =
+      enlaceWhatsApp(textoParaCompartir(r.paraderoId, r.categoria, tiempoRelativo(r.creadoEn)));
+
+    for (const boton of li.querySelectorAll(".boton-voto")) {
+      const tipo = boton.dataset.tipo;
+      if (miVoto) {
+        boton.disabled = true;
+        if (miVoto === tipo) {
+          boton.classList.add("votado");
+          boton.textContent += " · tu voto";
+        }
+      }
+      boton.addEventListener("click", () => votar(r.id, tipo, li));
+    }
     lista.appendChild(li);
   }
 }
 
-// Cuenta reportes por paradero: { "481A00": 3, "504A00": 1, ... }
-function contarPorParadero(reportes) {
-  const conteo = {};
-  for (const r of reportes) {
-    conteo[r.paraderoId] = (conteo[r.paraderoId] ?? 0) + 1;
+async function votar(reporteId, tipo, li) {
+  li.querySelectorAll(".boton-voto").forEach((b) => (b.disabled = true));
+  try {
+    await motor.votar(reporteId, tipo);
+    // La lista se repinta sola cuando Firestore avisa del cambio; por si el
+    // contador no cambió (ya había votado), la repintamos igual.
+    pintarListaReportes();
+  } catch (e) {
+    console.error(e);
+    li.querySelectorAll(".boton-voto").forEach((b) => (b.disabled = false));
+    alert(e.message.includes("Anónimo") ? e.message : "No se pudo registrar tu confirmación. Intenta de nuevo.");
   }
-  return conteo;
 }
 
 // ------------------------------------------------------------
-// 4. Arranque de la app
+// 5. Mapa
 // ------------------------------------------------------------
+document.querySelectorAll(".opcion-vista").forEach((boton) =>
+  boton.addEventListener("click", () => {
+    const vista = boton.dataset.vista;
+    document.querySelectorAll(".opcion-vista").forEach((b) => b.classList.toggle("activa", b === boton));
+    $("leyenda-circulos").hidden = vista === "calor";
+    $("leyenda-calor").hidden = vista !== "calor";
+    cambiarVista(vista);
+  }));
+
+// ------------------------------------------------------------
+// 6. Botón de emergencia
+// ------------------------------------------------------------
+$("boton-sos").addEventListener("click", () => {
+  $("estado-ubicacion").textContent = "";
+  $("dialogo-sos").showModal();
+});
+
+// Solo se pide la ubicación si la persona toca este botón, y se envía
+// únicamente a quien elija en WhatsApp (no se guarda en la base de datos).
+$("boton-ubicacion").addEventListener("click", () => {
+  const estado = $("estado-ubicacion");
+  if (!navigator.geolocation) {
+    estado.textContent = "Tu navegador no permite compartir ubicación.";
+    return;
+  }
+  estado.textContent = "Obteniendo tu ubicación…";
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const { latitude, longitude } = pos.coords;
+      const texto = `🆘 Necesito ayuda. Estoy aquí: https://www.google.com/maps?q=${latitude},${longitude}`;
+      estado.textContent = "";
+      window.open(enlaceWhatsApp(texto), "_blank", "noopener");
+    },
+    () => (estado.textContent = "No se pudo obtener la ubicación. Revisa los permisos del navegador."),
+    { enableHighAccuracy: true, timeout: 15000 },
+  );
+});
+
+// ------------------------------------------------------------
+// 7. Arranque de la app
+// ------------------------------------------------------------
+function alCambiarReportes(nuevos) {
+  reportes = nuevos;
+  pintarListaReportes();
+  const transparencia = textoTransparencia();
+  $("transparencia-lista").textContent = transparencia;
+  $("transparencia-mapa").textContent = transparencia;
+  if (hayMapa) actualizarMapa(contarPor(reportes.filter(estaActivo), (r) => r.paraderoId));
+  pintarResumen($("contenido-resumen"), reportes, paraderos);
+}
+
 async function iniciar() {
   if (modoDemo) {
     const aviso = $("aviso-modo");
@@ -213,26 +352,34 @@ async function iniciar() {
     return;
   }
   if (paraderos.length === 0) {
-    mostrarError("No hay paraderos en la base de datos. Créalos en Firestore (ver docs/GUIA-FIREBASE.md).");
+    mostrarError("No hay paraderos en la base de datos. Créalos con sembrar.html (ver docs/GUIA-FIREBASE.md).");
   }
   pintarParaderos();
 
   // Si el mapa falla (ej: sin internet para cargar Leaflet), el resto
   // de la app debe seguir funcionando.
-  let hayMapa = true;
   try {
     crearMapa("contenedor-mapa", paraderos);
+    hayMapa = true;
+    if (!calorDisponible()) document.querySelector('[data-vista="calor"]').hidden = true;
   } catch (e) {
     console.error("No se pudo crear el mapa:", e);
-    hayMapa = false;
     $("contenedor-mapa").textContent = "No se pudo cargar el mapa. Revisa tu conexión.";
   }
+  // La leyenda del CAI solo tiene sentido si hay CAI en el mapa
+  if (CAIS.length === 0) document.querySelector(".punto-cai").parentElement.remove();
 
-  // Cada vez que llegan reportes nuevos, actualizamos lista y mapa
-  motor.escucharReportesRecientes((reportes) => {
-    pintarListaReportes(reportes);
-    if (hayMapa) actualizarColores(contarPorParadero(reportes));
-  });
+  // Cada vez que llegan reportes nuevos, se actualiza todo
+  motor.escucharReportes(alCambiarReportes);
+
+  // Los "hace X min" envejecen aunque no lleguen reportes nuevos
+  setInterval(() => alCambiarReportes(reportes), 60 * 1000);
 }
 
 iniciar();
+
+// PWA: registra el "service worker", que permite instalar la app
+// y abrirla aunque la conexión esté mala.
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").catch((e) => console.warn("Service worker:", e));
+}
