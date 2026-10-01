@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sembrar paraderos · Alerta Vial</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 16px; }
+    button { font: inherit; padding: 12px 20px; cursor: pointer; }
+    pre { background: #f1f1f1; padding: 12px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Sembrar paraderos</h1>
+  <p>
+    Esta página crea (o actualiza) los documentos de la colección
+    <code>paraderos</code> en Firestore usando la lista de
+    <code>js/paraderos-semilla.js</code>.
+  </p>
+  <p>
+    <strong>Úsala solo mientras Firestore esté en "modo de prueba".</strong>
+    Cuando publiques las reglas definitivas (<code>firestore.rules</code>),
+    esta página dejará de poder escribir, y eso es lo correcto.
+  </p>
+  <button id="btn">Crear paraderos</button>
+  <pre id="log"></pre>
+
+  <script type="module">
+    import { PARADEROS_SEMILLA } from "./js/paraderos-semilla.js";
+    import { guardarParadero } from "./js/datos.js";
+
+    const log = (t) => document.getElementById("log").textContent += t + "\n";
+
+    document.getElementById("btn").addEventListener("click", async () => {
+      for (const p of PARADEROS_SEMILLA) {
+        try {
+          await guardarParadero(p);
+          log(`✔ ${p.codigo} - ${p.nombre}`);
+        } catch (e) {
+          log(`✘ ${p.codigo}: ${e.message}`);
+        }
+      }
+      log("Listo. Ya puedes abrir index.html");
+    });
+  </script>
+</body>
+</html>

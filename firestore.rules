@@ -1,0 +1,64 @@
+// =============================================================
+// REGLAS DE SEGURIDAD DE FIRESTORE (MVP, sin login)
+// -------------------------------------------------------------
+// Se pegan en: Consola de Firebase > Firestore Database > Reglas.
+//
+// Qué permiten:
+//  - Cualquiera puede LEER paraderos y reportes.
+//  - Nadie puede modificar paraderos desde la app (solo desde la consola).
+//  - Cualquiera puede CREAR un reporte, pero solo si viene bien formado:
+//      campos exactos, categoría válida, paradero que exista,
+//      descripción de máximo 280 caracteres y hora puesta por el servidor.
+//  - Nadie puede editar ni borrar reportes desde la app.
+// =============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /paraderos/{paraderoId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /reportes/{reporteId} {
+      allow read: if true;
+
+      allow create: if
+        request.resource.data.keys().hasOnly(
+          ['paraderoId', 'categoria', 'descripcion', 'hora', 'franja', 'creadoEn',
+           'confirmVigente', 'confirmResuelto'])
+        && request.resource.data.keys().hasAll(
+          ['paraderoId', 'categoria', 'descripcion', 'hora', 'franja', 'creadoEn',
+           'confirmVigente', 'confirmResuelto'])
+        && request.resource.data.paraderoId is string
+        && exists(/databases/$(database)/documents/paraderos/$(request.resource.data.paraderoId))
+        && request.resource.data.categoria in ['hurto', 'alumbrado', 'zona_oscura', 'acoso', 'otro']
+        && request.resource.data.descripcion is string
+        && request.resource.data.descripcion.size() <= 280
+        && request.resource.data.hora is int
+        && request.resource.data.hora >= 0 && request.resource.data.hora <= 23
+        && request.resource.data.franja in ['manana', 'tarde', 'noche']
+        && request.resource.data.creadoEn == request.time
+        && request.resource.data.confirmVigente == 0
+        && request.resource.data.confirmResuelto == 0;
+
+      // Confirmación comunitaria: cualquiera puede sumar +1 a
+      // confirmVigente o a confirmResuelto, uno a la vez, y nada más.
+      // No se puede tocar ningún otro campo del reporte.
+      // Usamos resource.data.get(..., 0) en vez de resource.data.campo
+      // directo, porque los reportes creados ANTES de agregar estos
+      // contadores no tienen el campo guardado, y sumarle 1 a "nada"
+      // (null + 1) hace que la regla falle y Firestore niegue el
+      // permiso. Con get() tratamos "no existe" como 0.
+      allow update: if
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['confirmVigente'])
+          && request.resource.data.confirmVigente == resource.data.get('confirmVigente', 0) + 1)
+        ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['confirmResuelto'])
+          && request.resource.data.confirmResuelto == resource.data.get('confirmResuelto', 0) + 1);
+
+      allow delete: if false;
+    }
+  }
+}

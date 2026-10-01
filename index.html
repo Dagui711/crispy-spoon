@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alerta Vial · Paraderos Tadeo</title>
+
+  <!-- Estilos de Leaflet (mapa) y los nuestros -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+  <header class="encabezado">
+    <h1>🚏 Alerta Vial</h1>
+    <p>Paraderos SITP cerca de la Tadeo</p>
+  </header>
+
+  <!-- Mensajes de error o configuración pendiente -->
+  <div id="aviso" class="aviso" hidden></div>
+
+  <main>
+    <!-- ===== VISTA 1: REPORTAR ===== -->
+    <section id="vista-reportar" class="vista">
+      <h2>Reportar incidente</h2>
+      <form id="form-reporte">
+        <label for="paradero" class="etiqueta">Paradero</label>
+        <select id="paradero" required></select>
+
+        <span class="etiqueta">¿Qué pasa?</span>
+        <div id="categorias" class="categorias"></div>
+
+        <label for="descripcion" class="etiqueta">Detalle (opcional)</label>
+        <textarea id="descripcion" maxlength="280" rows="3"
+          placeholder="Ej: la lámpara del costado norte lleva 3 días apagada"></textarea>
+
+        <button id="btn-enviar" type="submit" class="boton-principal">Enviar reporte</button>
+        <p class="nota">Los reportes son anónimos.</p>
+      </form>
+    </section>
+
+    <!-- ===== VISTA: CONFIRMACIÓN ===== -->
+    <section id="vista-confirmacion" class="vista" hidden>
+      <div class="confirmacion">
+        <div class="check">✅</div>
+        <h2>¡Reporte enviado!</h2>
+        <dl>
+          <dt>Paradero</dt><dd id="conf-paradero"></dd>
+          <dt>Hora</dt><dd id="conf-hora"></dd>
+          <dt>Categoría</dt><dd id="conf-categoria"></dd>
+        </dl>
+        <button id="btn-ver-mapa" class="boton-principal">Ver en el mapa</button>
+        <button id="btn-otro" class="boton-secundario">Hacer otro reporte</button>
+      </div>
+    </section>
+
+    <!-- ===== VISTA 2: RECIENTES ===== -->
+    <section id="vista-recientes" class="vista" hidden>
+      <h2>Reportes recientes</h2>
+      <div id="lista-recientes" class="lista"></div>
+    </section>
+
+    <!-- ===== VISTA 3: MAPA ===== -->
+    <section id="vista-mapa" class="vista" hidden>
+      <h2>Mapa de paraderos</h2>
+      <div id="mapa"></div>
+    </section>
+  </main>
+
+  <!-- Barra de pestañas inferior -->
+  <nav class="pestanas">
+    <button class="pestana" data-vista="reportar">📣<span>Reportar</span></button>
+    <button class="pestana" data-vista="recientes">🕒<span>Recientes</span></button>
+    <button class="pestana" data-vista="mapa">🗺️<span>Mapa</span></button>
+  </nav>
+
+  <!-- Leaflet primero (crea el objeto global L), luego el plugin de mapa
+       de calor (leaflet.heat), luego nuestra app -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
