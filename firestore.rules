@@ -12,7 +12,8 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Paraderos: solo lectura. Se crean a mano desde la consola.
+    // Paraderos: solo lectura. Se crean con sembrar.html (en modo de prueba)
+    // o desde la consola de Firebase.
     match /paraderos/{paraderoId} {
       allow read: if true;
       allow write: if false;
