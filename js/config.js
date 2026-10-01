@@ -13,12 +13,12 @@
 // reportes solo en tu navegador (localStorage). Así puedes probar ya mismo.
 // ============================================================
 export const firebaseConfig = {
-  apiKey: "",
-  authDomain: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: "",
+  apiKey: "AIzaSyDYG8DoIhjFe7DxtuBq8eESuxy-HCP6ICQ",
+  authDomain: "paradero-seguro-tadeo.firebaseapp.com",
+  projectId: "paradero-seguro-tadeo",
+  storageBucket: "paradero-seguro-tadeo.firebasestorage.app",
+  messagingSenderId: "1073506245745",
+  appId: "1:1073506245745:web:4c9114d2fe651ff5edcfd0",
 };
 
 // true cuando ya pegaste tu configuración real
