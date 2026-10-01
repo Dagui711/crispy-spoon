@@ -7,13 +7,13 @@
 // Estrategia:
 //   - Archivos de la app (html, css, js): primero internet, para tener
 //     siempre la última versión; si no hay conexión, la copia guardada.
-//   - Librerías externas (Leaflet, Firebase): primero la copia guardada,
-//     porque su versión nunca cambia.
+//   - Librerías externas (Leaflet, Firebase, tipografías de Google Fonts):
+//     primero la copia guardada, porque su versión nunca cambia.
 //   - Firestore y el mapa base: no se tocan (Firebase maneja lo suyo).
 //
 // ⚠️ Si cambias la lista de archivos, sube el número de VERSION.
 // ============================================================
-const VERSION = "v1";
+const VERSION = "v2";
 const CACHE = `paradero-seguro-${VERSION}`;
 
 const ARCHIVOS_APP = [
@@ -29,10 +29,17 @@ const ARCHIVOS_APP = [
   "js/resumen.js",
   "manifest.webmanifest",
   "iconos/icono.svg",
+  "iconos/icono-180.png",
   "iconos/icono-192.png",
+  "iconos/icono-512.png",
 ];
 
-const LIBRERIAS = ["https://cdnjs.cloudflare.com/", "https://www.gstatic.com/firebasejs/"];
+const LIBRERIAS = [
+  "https://cdnjs.cloudflare.com/",
+  "https://www.gstatic.com/firebasejs/",
+  "https://fonts.googleapis.com/",   // hojas de estilo de las tipografías
+  "https://fonts.gstatic.com/",      // archivos de las tipografías
+];
 
 // Al instalarse: guarda los archivos de la app
 self.addEventListener("install", (evento) => {
