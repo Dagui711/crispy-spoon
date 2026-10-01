@@ -1,0 +1,228 @@
+/* ============================================================
+   Estilos de Paradero Seguro
+   Las variables (--algo) guardan colores para reutilizarlos.
+   ============================================================ */
+:root {
+  --fondo: #f4f5f7;
+  --tarjeta: #ffffff;
+  --texto: #1d2330;
+  --texto-suave: #5b6476;
+  --primario: #c8102e;      /* rojo, parecido al de la Tadeo / SITP */
+  --primario-oscuro: #9b0c23;
+  --borde: #d9dde5;
+  --error: #b00020;
+
+  /* Colores del mapa según cantidad de reportes */
+  --nivel-0: #2e9d4f;  /* verde: sin reportes */
+  --nivel-1: #f2c12e;  /* amarillo */
+  --nivel-2: #f07f1a;  /* naranja */
+  --nivel-3: #d32f2f;  /* rojo */
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--fondo);
+  color: var(--texto);
+  line-height: 1.4;
+}
+
+.encabezado {
+  background: var(--primario);
+  color: #fff;
+  padding: 16px;
+  text-align: center;
+}
+.encabezado h1 { margin: 0; font-size: 1.5rem; }
+.subtitulo { margin: 4px 0 0; opacity: 0.9; font-size: 0.9rem; }
+.aviso-modo {
+  margin: 8px auto 0;
+  background: #fff3cd;
+  color: #664d03;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  max-width: 480px;
+}
+
+/* ---------- Pestañas ---------- */
+.pestanas {
+  display: flex;
+  background: var(--tarjeta);
+  border-bottom: 1px solid var(--borde);
+  position: sticky;
+  top: 0;
+  z-index: 1000; /* por encima del mapa */
+}
+.pestana {
+  flex: 1;
+  padding: 14px 8px;
+  border: none;
+  background: none;
+  font-size: 1rem;
+  color: var(--texto-suave);
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+}
+.pestana.activa {
+  color: var(--primario);
+  border-bottom-color: var(--primario);
+  font-weight: 600;
+}
+
+/* ---------- Secciones: solo se ve la activa ---------- */
+main { max-width: 640px; margin: 0 auto; padding: 16px; }
+.seccion { display: none; }
+.seccion.activa { display: block; }
+
+.tarjeta {
+  background: var(--tarjeta);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.tarjeta h2 { margin-top: 0; font-size: 1.25rem; }
+
+/* ---------- Formulario ---------- */
+label, legend { display: block; font-weight: 600; margin: 16px 0 6px; }
+fieldset { border: none; padding: 0; margin: 0; }
+
+select, textarea {
+  width: 100%;
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  font-family: inherit;
+  background: #fff;
+  color: var(--texto);
+}
+
+.categorias {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.categoria {
+  padding: 14px 8px;
+  border: 2px solid var(--borde);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 0.95rem;
+  cursor: pointer;
+  color: var(--texto);
+}
+.categoria .icono { display: block; font-size: 1.6rem; margin-bottom: 4px; }
+.categoria.seleccionada {
+  border-color: var(--primario);
+  background: #fdecee;
+  font-weight: 600;
+}
+
+.nota { color: var(--texto-suave); font-size: 0.85rem; font-weight: normal; }
+.contador { text-align: right; margin: 4px 0 0; }
+
+.mensaje-error {
+  background: #fde7ea;
+  color: var(--error);
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.boton-principal, .boton-secundario {
+  width: 100%;
+  padding: 14px;
+  font-size: 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: 12px;
+}
+.boton-principal {
+  background: var(--primario);
+  color: #fff;
+  border: none;
+  font-weight: 600;
+}
+.boton-principal:hover { background: var(--primario-oscuro); }
+.boton-principal:disabled { opacity: 0.6; cursor: wait; }
+.boton-secundario {
+  background: #fff;
+  color: var(--primario);
+  border: 2px solid var(--primario);
+}
+
+/* ---------- Confirmación ---------- */
+.confirmacion { text-align: center; }
+.check {
+  width: 64px; height: 64px;
+  margin: 0 auto 8px;
+  border-radius: 50%;
+  background: var(--nivel-0);
+  color: #fff;
+  font-size: 2rem;
+  line-height: 64px;
+}
+.resumen {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+  text-align: left;
+  background: var(--fondo);
+  padding: 12px;
+  border-radius: 8px;
+}
+.resumen dt { font-weight: 600; }
+.resumen dd { margin: 0; }
+
+/* ---------- Lista de reportes ---------- */
+.lista-reportes { list-style: none; padding: 0; margin: 0; }
+.lista-reportes li {
+  border-bottom: 1px solid var(--borde);
+  padding: 12px 0;
+}
+.lista-reportes li:last-child { border-bottom: none; }
+.lista-reportes .vacio { color: var(--texto-suave); text-align: center; }
+.reporte-cabecera { display: flex; justify-content: space-between; gap: 8px; }
+.reporte-categoria { font-weight: 600; }
+.reporte-tiempo { color: var(--texto-suave); font-size: 0.85rem; white-space: nowrap; }
+.reporte-paradero { color: var(--texto-suave); font-size: 0.9rem; }
+.reporte-descripcion { margin: 4px 0 0; overflow-wrap: anywhere; }
+
+/* ---------- Mapa ---------- */
+#contenedor-mapa {
+  height: 420px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  font-size: 0.85rem;
+}
+.leyenda li { display: flex; align-items: center; gap: 4px; }
+.punto { display: inline-block; width: 14px; height: 14px; border-radius: 50%; }
+.nivel-0 { background: var(--nivel-0); }
+.nivel-1 { background: var(--nivel-1); }
+.nivel-2 { background: var(--nivel-2); }
+.nivel-3 { background: var(--nivel-3); }
+
+/* Círculo de cada paradero en el mapa, con el número de reportes */
+.marcador-conteo {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  color: #fff;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.6);
+}
