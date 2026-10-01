@@ -42,5 +42,9 @@ export const CENTRO_MAPA = [4.6068, -74.0677];
 //    Tadeo, confirmen que existe, y copien sus coordenadas (clic derecho).
 // Mientras esta lista esté vacía, el mapa ofrece "Buscar CAI cercano",
 // que abre Google Maps buscando CAI alrededor del paradero.
-// Ejemplo:  { nombre: "CAI …", lat: 4.60…, lng: -74.06… },
-export const CAIS = [];
+// Coordenadas verificadas por el equipo en Google Maps.
+export const CAIS = [
+  { nombre: "CAI Torres Blancas", lat: 4.606427351832539, lng: -74.06676166938554 },
+  { nombre: "CAI San Diego", lat: 4.612239579795225, lng: -74.0697620301909 },
+  { nombre: "CAI Colseguros", lat: 4.605710631580162, lng: -74.07377410705436 },
+];

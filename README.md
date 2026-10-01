@@ -96,5 +96,4 @@ lo guarda y avisa a todos los que tienen la app abierta → `app.js` repinta la 
 
 ## Pendientes
 
-- Agregar CAI verificados en `CAIS` (`js/catalogos.js`) para que aparezcan en el mapa.
 - QR de los 4 paraderos.
