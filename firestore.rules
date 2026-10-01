@@ -1,16 +1,27 @@
 // ============================================================
 // Reglas de seguridad de Firestore
 // ------------------------------------------------------------
-// Como la app NO tiene login, cualquiera con el enlace puede usarla.
-// Estas reglas son la "puerta" que decide qué se permite:
+// La app no pide registro, pero cada celular recibe una identidad
+// ANÓNIMA de Firebase (un código al azar, sin nombre ni correo).
+// Esa identidad permite:
+//   - Anti-spam: máximo 1 reporte cada 2 minutos por celular.
+//   - Confirmación comunitaria: 1 voto por celular en cada reporte.
+//
+// Resumen:
 //   - Todos pueden LEER paraderos y reportes.
-//   - Todos pueden CREAR un reporte, pero solo si viene bien formado.
-//   - Nadie puede EDITAR ni BORRAR desde la app (solo desde la consola).
+//   - Crear un reporte: solo si viene bien formado y se respeta la espera.
+//   - Votar: solo sumar +1 a "vigente" o a "resuelto", una vez por celular.
+//   - Nadie puede borrar nada desde la app (solo desde la consola).
 // Se publican en: Firebase → Firestore Database → pestaña "Reglas".
+// ⚠️ Si cambias la espera (2 minutos), cámbiala también en js/config.js.
 // ============================================================
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    function conSesion() {
+      return request.auth != null;
+    }
 
     // Paraderos: solo lectura. Se crean con sembrar.html (en modo de prueba)
     // o desde la consola de Firebase.
@@ -19,18 +30,63 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Reportes: lectura libre, creación validada, sin edición ni borrado.
+    // Límites anti-spam: un documento por celular con la hora y el id de su
+    // último reporte. Solo se puede actualizar si ya pasaron 2 minutos.
+    // Lo puede leer únicamente su dueño (nadie más sabe qué reportó cada celular).
+    match /limites/{uid} {
+      allow read: if conSesion() && request.auth.uid == uid;
+      allow create: if conSesion() && request.auth.uid == uid && limiteBienFormado();
+      allow update: if conSesion() && request.auth.uid == uid && limiteBienFormado()
+        && resource.data.ultimoReporte < request.time - duration.value(2, 'm');
+      allow delete: if false;
+    }
+
+    function limiteBienFormado() {
+      return request.resource.data.keys().hasOnly(['ultimoReporte', 'reporteId'])
+        && request.resource.data.keys().hasAll(['ultimoReporte', 'reporteId'])
+        && request.resource.data.reporteId is string
+        && request.resource.data.ultimoReporte == request.time;
+    }
+
     match /reportes/{reporteId} {
       allow read: if true;
-      allow create: if reporteValido(request.resource.data);
-      allow update, delete: if false;
+
+      // Crear: el reporte debe ser válido Y en la misma operación se debe
+      // actualizar el límite del celular (que solo se deja si pasaron 2 min)
+      // apuntando a ESTE reporte. Como el límite solo puede apuntar a un
+      // reporte, no se pueden colar varios reportes en una sola operación.
+      allow create: if conSesion()
+        && reporteValido(request.resource.data)
+        && getAfter(/databases/$(database)/documents/limites/$(request.auth.uid)).data.ultimoReporte == request.time
+        && getAfter(/databases/$(database)/documents/limites/$(request.auth.uid)).data.reporteId == reporteId;
+
+      // Votar: sumar +1 a un solo contador, a la vez que se crea el voto
+      // del celular (que solo puede existir una vez por reporte).
+      allow update: if conSesion()
+        && (votoValido(reporteId, 'vigente') || votoValido(reporteId, 'resuelto'));
+
+      allow delete: if false;
+
+      // Un documento por celular que votó: reportes/{id}/votos/{uid}
+      match /votos/{uid} {
+        allow read: if conSesion() && request.auth.uid == uid;
+        allow create: if conSesion() && request.auth.uid == uid
+          && request.resource.data.keys().hasOnly(['tipo', 'creadoEn'])
+          && request.resource.data.keys().hasAll(['tipo', 'creadoEn'])
+          && request.resource.data.tipo in ['vigente', 'resuelto']
+          && request.resource.data.creadoEn == request.time
+          // El contador del reporte debe subir en 1 en la misma operación
+          && getAfter(/databases/$(database)/documents/reportes/$(reporteId)).data.get(request.resource.data.tipo, 0)
+             == get(/databases/$(database)/documents/reportes/$(reporteId)).data.get(request.resource.data.tipo, 0) + 1;
+        allow update, delete: if false;
+      }
     }
 
     function reporteValido(d) {
       return
-        // Exactamente estos 4 campos, ni uno más ni uno menos
-        d.keys().hasOnly(['paraderoId', 'categoria', 'descripcion', 'creadoEn'])
-        && d.keys().hasAll(['paraderoId', 'categoria', 'descripcion', 'creadoEn'])
+        // Exactamente estos campos, ni uno más ni uno menos
+        d.keys().hasOnly(['paraderoId', 'categoria', 'descripcion', 'creadoEn', 'vigente', 'resuelto'])
+        && d.keys().hasAll(['paraderoId', 'categoria', 'descripcion', 'creadoEn', 'vigente', 'resuelto'])
         // El paradero debe existir en la colección "paraderos"
         && d.paraderoId is string
         && exists(/databases/$(database)/documents/paraderos/$(d.paraderoId))
@@ -40,7 +96,21 @@ service cloud.firestore {
         && d.descripcion is string
         && d.descripcion.size() <= 280
         // La hora debe ser la del servidor (nadie puede inventar fechas)
-        && d.creadoEn == request.time;
+        && d.creadoEn == request.time
+        // Los contadores de confirmación arrancan en cero
+        && d.vigente == 0
+        && d.resuelto == 0;
+    }
+
+    // Un voto es válido si solo cambia el contador indicado, sube en 1,
+    // y el celular no había votado antes en este reporte.
+    function votoValido(reporteId, campo) {
+      let votoRuta = /databases/$(database)/documents/reportes/$(reporteId)/votos/$(request.auth.uid);
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([campo])
+        // get(campo, 0): los reportes viejos no tienen el contador; cuenta como 0
+        && request.resource.data[campo] == resource.data.get(campo, 0) + 1
+        && !exists(votoRuta)
+        && getAfter(votoRuta).data.tipo == campo;
     }
   }
 }

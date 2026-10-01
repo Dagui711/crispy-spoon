@@ -65,6 +65,18 @@ segundo `lng`. Agrégalo a `PARADEROS_SEMILLA`, vuelve a poner las reglas abiert
 arriba, siembra, y vuelve a publicar `firestore.rules`. Sembrar dos veces no duplica:
 reemplaza cada paradero por su versión nueva.
 
+## Paso 4b — Activar el acceso anónimo
+
+El anti-spam y la confirmación comunitaria necesitan una identidad anónima por
+celular (sin nombre ni correo):
+
+1. Menú izquierdo → **Compilación / Build → Authentication → Comenzar**.
+2. Pestaña **Método de acceso (Sign-in method)** → **Anónimo** → actívalo → **Guardar**.
+3. Pestaña **Configuración → Dominios autorizados** → **Agregar dominio** →
+   `dagui711.github.io`.
+
+Sin este paso, la app muestra "Falta activar el acceso Anónimo" al reportar o votar.
+
 ## Paso 5 — Publicar las reglas de seguridad (¡no lo saltes!)
 
 1. Firestore Database → pestaña **Reglas**.

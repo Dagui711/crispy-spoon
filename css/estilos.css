@@ -1,25 +1,95 @@
 /* ============================================================
    Estilos de Paradero Seguro
    Las variables (--algo) guardan colores para reutilizarlos.
+   El modo noche solo cambia las variables: el resto del archivo
+   es igual para los dos modos.
    ============================================================ */
 :root {
   --fondo: #f4f5f7;
   --tarjeta: #ffffff;
+  --campo: #ffffff;          /* fondo de selects, textos y botones claros */
   --texto: #1d2330;
   --texto-suave: #5b6476;
-  --primario: #c8102e;      /* rojo, parecido al de la Tadeo / SITP */
+  --primario: #c8102e;       /* rojo, parecido al de la Tadeo / SITP */
   --primario-oscuro: #9b0c23;
+  --primario-suave: #fdecee; /* fondo de la categoría elegida */
+  --sobre-primario: #ffffff; /* texto encima del rojo */
   --borde: #d9dde5;
   --error: #b00020;
+  --error-fondo: #fde7ea;
+  --barra: #c8102e;          /* barras del resumen */
+  --pista: #eceef2;          /* fondo de las barras */
+  --whatsapp: #1a7f45;
+  --sombra: 0 1px 3px rgba(0, 0, 0, 0.08);
+
+  /* Estados de los reportes (siempre acompañados de texto) */
+  --ok: #1e7a3c;      --ok-fondo: #e3f4e8;
+  --aviso: #8a5a00;   --aviso-fondo: #fff3d6;
+  --neutro: #5b6476;  --neutro-fondo: #eceef2;
 
   /* Colores del mapa según cantidad de reportes */
   --nivel-0: #2e9d4f;  /* verde: sin reportes */
   --nivel-1: #f2c12e;  /* amarillo */
   --nivel-2: #f07f1a;  /* naranja */
   --nivel-3: #d32f2f;  /* rojo */
+  color-scheme: light;
+}
+
+/* ---------- MODO NOCHE de alto contraste ----------
+   Fondo negro, texto blanco y acentos amarillos: se lee bien de
+   noche en la calle y gasta menos batería en pantallas OLED.
+   Se activa con el botón 🌙, o solo si el celular está en modo oscuro. */
+:root[data-tema="noche"] {
+  --fondo: #000000;
+  --tarjeta: #121212;
+  --campo: #000000;
+  --texto: #ffffff;
+  --texto-suave: #d0d0d0;
+  --primario: #ffd23f;
+  --primario-oscuro: #ffe27a;
+  --primario-suave: #2b2400;
+  --sobre-primario: #000000;
+  --borde: #8a8a8a;
+  --error: #ff8a8a;
+  --error-fondo: #2a0000;
+  --barra: #ffd23f;
+  --pista: #2a2a2a;
+  --whatsapp: #4ade80;
+  --sombra: none;
+  --ok: #6ee7a0;      --ok-fondo: #062a14;
+  --aviso: #ffd23f;   --aviso-fondo: #2b2400;
+  --neutro: #d0d0d0;  --neutro-fondo: #262626;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) {
+    --fondo: #000000;
+    --tarjeta: #121212;
+    --campo: #000000;
+    --texto: #ffffff;
+    --texto-suave: #d0d0d0;
+    --primario: #ffd23f;
+    --primario-oscuro: #ffe27a;
+    --primario-suave: #2b2400;
+    --sobre-primario: #000000;
+    --borde: #8a8a8a;
+    --error: #ff8a8a;
+    --error-fondo: #2a0000;
+    --barra: #ffd23f;
+    --pista: #2a2a2a;
+    --whatsapp: #4ade80;
+    --sombra: none;
+    --ok: #6ee7a0;      --ok-fondo: #062a14;
+    --aviso: #ffd23f;   --aviso-fondo: #2b2400;
+    --neutro: #d0d0d0;  --neutro-fondo: #262626;
+    color-scheme: dark;
+  }
 }
 
 * { box-sizing: border-box; }
+
+/* "hidden" siempre gana, aunque el elemento tenga display: flex o block */
+[hidden] { display: none !important; }
 
 body {
   margin: 0;
@@ -27,12 +97,17 @@ body {
   background: var(--fondo);
   color: var(--texto);
   line-height: 1.4;
+  padding-bottom: 88px; /* espacio para que el botón SOS no tape contenido */
 }
 
+a { color: var(--primario); }
+:focus-visible { outline: 3px solid var(--primario); outline-offset: 2px; }
+
 .encabezado {
+  position: relative;
   background: var(--primario);
-  color: #fff;
-  padding: 16px;
+  color: var(--sobre-primario);
+  padding: 16px 56px;
   text-align: center;
 }
 .encabezado h1 { margin: 0; font-size: 1.5rem; }
@@ -46,6 +121,18 @@ body {
   font-size: 0.8rem;
   max-width: 480px;
 }
+.boton-tema {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--sobre-primario);
+  background: transparent;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
 
 /* ---------- Pestañas ---------- */
 .pestanas {
@@ -58,10 +145,10 @@ body {
 }
 .pestana {
   flex: 1;
-  padding: 14px 8px;
+  padding: 14px 4px;
   border: none;
   background: none;
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: var(--texto-suave);
   border-bottom: 3px solid transparent;
   cursor: pointer;
@@ -81,8 +168,10 @@ main { max-width: 640px; margin: 0 auto; padding: 16px; }
   background: var(--tarjeta);
   border-radius: 12px;
   padding: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--sombra);
+  border: 1px solid transparent;
 }
+:root[data-tema="noche"] .tarjeta { border-color: #333; }
 .tarjeta h2 { margin-top: 0; font-size: 1.25rem; }
 
 /* ---------- Formulario ---------- */
@@ -96,7 +185,7 @@ select, textarea {
   border: 1px solid var(--borde);
   border-radius: 8px;
   font-family: inherit;
-  background: #fff;
+  background: var(--campo);
   color: var(--texto);
 }
 
@@ -109,7 +198,7 @@ select, textarea {
   padding: 14px 8px;
   border: 2px solid var(--borde);
   border-radius: 10px;
-  background: #fff;
+  background: var(--campo);
   font-size: 0.95rem;
   cursor: pointer;
   color: var(--texto);
@@ -119,7 +208,7 @@ select, textarea {
 .categoria .icono { display: block; font-size: 1.6rem; margin-bottom: 4px; }
 .categoria.seleccionada {
   border-color: var(--primario);
-  background: #fdecee;
+  background: var(--primario-suave);
   font-weight: 600;
 }
 
@@ -127,32 +216,42 @@ select, textarea {
 .contador { text-align: right; margin: 4px 0 0; }
 
 .mensaje-error {
-  background: #fde7ea;
+  background: var(--error-fondo);
   color: var(--error);
   padding: 10px;
   border-radius: 8px;
 }
 
-.boton-principal, .boton-secundario {
+.boton-principal, .boton-secundario, .boton-whatsapp {
+  display: block;
   width: 100%;
   padding: 14px;
   font-size: 1rem;
   border-radius: 10px;
   cursor: pointer;
   margin-top: 12px;
+  text-align: center;
+  text-decoration: none;
+  font-family: inherit;
 }
 .boton-principal {
   background: var(--primario);
-  color: #fff;
+  color: var(--sobre-primario);
   border: none;
   font-weight: 600;
 }
 .boton-principal:hover { background: var(--primario-oscuro); }
 .boton-principal:disabled { opacity: 0.6; cursor: wait; }
 .boton-secundario {
-  background: #fff;
+  background: var(--campo);
   color: var(--primario);
   border: 2px solid var(--primario);
+}
+.boton-whatsapp {
+  background: var(--whatsapp);
+  color: var(--campo);
+  border: none;
+  font-weight: 600;
 }
 
 /* ---------- Confirmación ---------- */
@@ -166,7 +265,7 @@ select, textarea {
   font-size: 2rem;
   line-height: 64px;
 }
-.resumen {
+.resumen-reporte {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 6px 12px;
@@ -175,28 +274,99 @@ select, textarea {
   padding: 12px;
   border-radius: 8px;
 }
-.resumen dt { font-weight: 600; }
-.resumen dd { margin: 0; }
+.resumen-reporte dt { font-weight: 600; }
+.resumen-reporte dd { margin: 0; }
+
+/* ---------- Indicador de transparencia ---------- */
+.transparencia {
+  background: var(--neutro-fondo);
+  color: var(--texto);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  margin: 0 0 8px;
+}
 
 /* ---------- Lista de reportes ---------- */
 .lista-reportes { list-style: none; padding: 0; margin: 0; }
 .lista-reportes li {
   border-bottom: 1px solid var(--borde);
-  padding: 12px 0;
+  padding: 14px 0;
 }
 .lista-reportes li:last-child { border-bottom: none; }
 .lista-reportes .vacio { color: var(--texto-suave); text-align: center; }
+.reporte.estado-resuelto { opacity: 0.7; }
 .reporte-cabecera { display: flex; justify-content: space-between; gap: 8px; }
 .reporte-categoria { font-weight: 600; }
 .reporte-tiempo { color: var(--texto-suave); font-size: 0.85rem; white-space: nowrap; }
 .reporte-paradero { color: var(--texto-suave); font-size: 0.9rem; }
 .reporte-descripcion { margin: 4px 0 0; overflow-wrap: anywhere; }
 
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip {
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--neutro-fondo);
+  color: var(--neutro);
+}
+.estado-confirmado .chip-estado { background: var(--ok-fondo); color: var(--ok); font-weight: 600; }
+.estado-resuelto .chip-estado { background: var(--neutro-fondo); color: var(--neutro); }
+.chip-frescura.frescura-fresco { background: var(--ok-fondo); color: var(--ok); }
+.chip-frescura.frescura-viejo { background: var(--aviso-fondo); color: var(--aviso); }
+
+.acciones-reporte { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.boton-voto, .boton-compartir {
+  padding: 8px 10px;
+  min-height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--borde);
+  background: var(--campo);
+  color: var(--texto);
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+.boton-voto:disabled { cursor: default; opacity: 0.55; }
+.boton-voto.votado { opacity: 1; border-color: var(--primario); font-weight: 600; }
+.boton-compartir { margin-left: auto; color: var(--whatsapp); border-color: var(--whatsapp); }
+
 /* ---------- Mapa ---------- */
+.selector-vista {
+  display: flex;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.opcion-vista {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: var(--campo);
+  color: var(--texto);
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.opcion-vista.activa { background: var(--primario); color: var(--sobre-primario); font-weight: 600; }
+
 #contenedor-mapa {
   height: 420px;
   border-radius: 8px;
   overflow: hidden;
+}
+/* En modo noche, el mapa base (calles) se oscurece; los marcadores no */
+:root[data-tema="noche"] .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(1.1);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) .leaflet-tile-pane {
+    filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(1.1);
+  }
 }
 .leyenda {
   display: flex;
@@ -209,6 +379,7 @@ select, textarea {
 }
 .leyenda li { display: flex; align-items: center; gap: 4px; }
 .punto { display: inline-block; width: 14px; height: 14px; border-radius: 50%; }
+.punto-cai { width: auto; height: auto; }
 .nivel-0 { background: var(--nivel-0); }
 .nivel-1 { background: var(--nivel-1); }
 .nivel-2 { background: var(--nivel-2); }
@@ -227,4 +398,131 @@ select, textarea {
   align-items: center;
   justify-content: center;
   text-shadow: 0 0 2px rgba(0, 0, 0, 0.6);
+}
+.marcador-cai {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  background: #1d4ed8;
+  border: 2px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+.popup-paradero { min-width: 180px; }
+.popup-codigo, .popup-cantidad { color: #5b6476; font-size: 0.85rem; }
+.popup-enlace {
+  display: block;
+  margin-top: 8px;
+  padding: 8px;
+  border: 1px solid #d9dde5;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #1d2330 !important;
+}
+
+/* ---------- Resumen semanal ---------- */
+.cifra-semana { display: flex; flex-direction: column; gap: 2px; margin: 8px 0 12px; }
+.numero-grande { font-size: 3rem; font-weight: 700; line-height: 1; }
+.aviso-pocos-datos {
+  background: var(--aviso-fondo);
+  color: var(--aviso);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+}
+.bloque-resumen { margin-top: 20px; }
+.bloque-resumen h3 { font-size: 1rem; margin: 0 0 8px; }
+.barras { list-style: none; padding: 0; margin: 0; }
+.fila-barra {
+  display: grid;
+  grid-template-columns: minmax(110px, 40%) 1fr 2.5em;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 0.85rem;
+}
+.nombre-barra { overflow-wrap: anywhere; }
+.pista-barra { background: var(--pista); border-radius: 4px; height: 12px; }
+.barra {
+  display: block;
+  height: 100%;
+  background: var(--barra);
+  border-radius: 4px;
+  min-width: 0;
+}
+.valor-barra { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+.grafico-horas {
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+  align-items: end;
+  gap: 2px; /* separación entre barras */
+  height: 120px;
+  border-bottom: 1px solid var(--borde);
+}
+.columna-hora { height: 100%; display: flex; align-items: flex-end; }
+.barra-hora {
+  width: 100%;
+  background: var(--barra);
+  opacity: 0.55;
+  border-radius: 4px 4px 0 0; /* puntas redondeadas arriba, base recta */
+}
+.barra-hora.pico { opacity: 1; }
+.columna-hora:hover .barra-hora { opacity: 1; }
+.eje-horas { position: relative; height: 18px; font-size: 0.7rem; color: var(--texto-suave); }
+.eje-horas span { position: absolute; transform: translateX(-50%); white-space: nowrap; top: 2px; }
+.eje-horas span:first-child { transform: none; left: 0 !important; }
+.eje-horas span:last-child { transform: translateX(-100%); left: 100% !important; }
+
+/* ---------- Botón de emergencia ---------- */
+.boton-sos {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 1100;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  background: #d32f2f;
+  color: #fff;
+  font-weight: 800;
+  font-size: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+.dialogo-sos {
+  border: none;
+  border-radius: 14px;
+  padding: 20px;
+  width: min(92vw, 420px);
+  background: var(--tarjeta);
+  color: var(--texto);
+}
+.dialogo-sos::backdrop { background: rgba(0, 0, 0, 0.6); }
+.dialogo-sos h2 { margin-top: 0; }
+.boton-llamar {
+  display: block;
+  padding: 14px;
+  margin-top: 10px;
+  border-radius: 10px;
+  background: #d32f2f;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-decoration: none;
+}
+.boton-llamar small { display: block; font-weight: normal; font-size: 0.8rem; opacity: 0.9; }
+.boton-llamar.secundario { background: #6d28d9; }
+.boton-cerrar {
+  margin-top: 12px;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  background: none;
+  color: var(--texto-suave);
+  font-size: 0.95rem;
+  cursor: pointer;
 }

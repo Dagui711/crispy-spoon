@@ -6,15 +6,32 @@
   <title>Paradero Seguro · Tadeo</title>
   <meta name="description" content="Reporta incidentes de inseguridad en los paraderos del SITP cercanos a la Universidad Jorge Tadeo Lozano.">
 
-  <!-- Leaflet: la librería del mapa (hoja de estilos + código) -->
+  <!-- PWA: permite "instalar" la app en el celular -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#c8102e">
+  <link rel="icon" href="iconos/icono.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="iconos/icono-180.png">
+  <meta name="apple-mobile-web-app-title" content="Paradero Seguro">
+
+  <!-- El tema (claro/noche) se aplica ANTES de pintar, para que no parpadee -->
+  <script>
+    try {
+      const t = localStorage.getItem("paradero-seguro-tema");
+      if (t) document.documentElement.dataset.tema = t;
+    } catch {}
+  </script>
+
+  <!-- Leaflet: la librería del mapa, y su plugin de mapa de calor -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
 
   <!-- Nuestros estilos -->
   <link rel="stylesheet" href="css/estilos.css">
 </head>
 <body>
   <header class="encabezado">
+    <button id="boton-tema" class="boton-tema" type="button" aria-label="Cambiar a modo noche">🌙</button>
     <h1>Paradero Seguro</h1>
     <p class="subtitulo">Paraderos SITP · Universidad Jorge Tadeo Lozano</p>
     <p id="aviso-modo" class="aviso-modo" hidden></p>
@@ -25,6 +42,7 @@
     <button class="pestana activa" data-seccion="reportar">Reportar</button>
     <button class="pestana" data-seccion="recientes">Recientes</button>
     <button class="pestana" data-seccion="mapa">Mapa</button>
+    <button class="pestana" data-seccion="resumen">Resumen</button>
   </nav>
 
   <main>
@@ -62,11 +80,12 @@
       <div id="confirmacion" class="tarjeta confirmacion" hidden>
         <div class="check" aria-hidden="true">✓</div>
         <h2>¡Reporte enviado!</h2>
-        <dl class="resumen">
+        <dl class="resumen-reporte">
           <dt>Paradero</dt><dd id="conf-paradero"></dd>
           <dt>Hora</dt><dd id="conf-hora"></dd>
           <dt>Categoría</dt><dd id="conf-categoria"></dd>
         </dl>
+        <a id="boton-whatsapp" class="boton-whatsapp" target="_blank" rel="noopener">Avisar por WhatsApp</a>
         <button id="boton-otro" class="boton-secundario">Hacer otro reporte</button>
         <button id="boton-ver-mapa" class="boton-secundario">Ver mapa</button>
       </div>
@@ -76,7 +95,8 @@
     <section id="recientes" class="seccion">
       <div class="tarjeta">
         <h2>Reportes recientes</h2>
-        <p class="nota">Últimos 7 días · se actualiza solo</p>
+        <p id="transparencia-lista" class="transparencia"></p>
+        <p class="nota">¿Pasaste por ahí? Confirma si el problema sigue o ya se resolvió.</p>
         <ul id="lista-reportes" class="lista-reportes">
           <li class="vacio">Cargando…</li>
         </ul>
@@ -87,17 +107,48 @@
     <section id="mapa" class="seccion">
       <div class="tarjeta">
         <h2>Mapa de paraderos</h2>
-        <p class="nota">Color según la cantidad de reportes en los últimos 7 días</p>
+        <p id="transparencia-mapa" class="transparencia"></p>
+        <div class="selector-vista" role="group" aria-label="Tipo de mapa">
+          <button class="opcion-vista activa" data-vista="circulos" type="button">Por paradero</button>
+          <button class="opcion-vista" data-vista="calor" type="button">Mapa de calor</button>
+        </div>
         <div id="contenedor-mapa"></div>
-        <ul class="leyenda">
+        <ul class="leyenda" id="leyenda-circulos">
           <li><span class="punto nivel-0"></span>0</li>
           <li><span class="punto nivel-1"></span>1–2</li>
           <li><span class="punto nivel-2"></span>3–5</li>
           <li><span class="punto nivel-3"></span>6 o más</li>
+          <li><span class="punto punto-cai">👮</span>CAI</li>
         </ul>
+        <p class="nota" id="leyenda-calor" hidden>
+          Más intenso = más reportes activos. Los reportes no guardan ubicación
+          GPS, así que el calor se concentra en cada paradero.
+        </p>
+        <p class="nota">Toca un paradero para ver cómo llegar o buscar el CAI más cercano.
+          Cuentan los reportes de los últimos 7 días que no se marcaron como resueltos.</p>
+      </div>
+    </section>
+
+    <!-- ========== SECCIÓN 4: RESUMEN SEMANAL ========== -->
+    <section id="resumen" class="seccion">
+      <div class="tarjeta">
+        <h2>Resumen de la semana</h2>
+        <p class="nota">Últimos 7 días, comparados con los 7 anteriores. Hora de Bogotá.</p>
+        <div id="contenido-resumen"></div>
       </div>
     </section>
   </main>
+
+  <!-- Botón de emergencia (siempre visible) -->
+  <button id="boton-sos" class="boton-sos" type="button" aria-haspopup="dialog">SOS</button>
+  <dialog id="dialogo-sos" class="dialogo-sos" aria-labelledby="titulo-sos">
+    <h2 id="titulo-sos">¿Necesitas ayuda?</h2>
+    <a class="boton-llamar" href="tel:123">📞 Llamar al 123<small>Policía y emergencias</small></a>
+    <a class="boton-llamar secundario" href="tel:155">📞 Línea 155<small>Orientación a mujeres víctimas de violencia</small></a>
+    <button id="boton-ubicacion" class="boton-secundario" type="button">📍 Enviar mi ubicación por WhatsApp</button>
+    <p id="estado-ubicacion" class="nota" role="status"></p>
+    <form method="dialog"><button class="boton-cerrar">Cerrar</button></form>
+  </dialog>
 
   <!-- type="module" nos permite usar "import" entre archivos JS -->
   <script type="module" src="js/app.js"></script>
