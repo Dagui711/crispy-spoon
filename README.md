@@ -3,7 +3,7 @@
 App web para reportar incidentes de inseguridad en los paraderos del SITP cercanos a la
 Universidad Jorge Tadeo Lozano (Bogotá). Es el proyecto de aula de Ingeniería de Sistemas
 (nocturna, primer semestre) del grupo: Luisa Tovar, Catalina Moreno, Samir Quintero,
-Ángel Parra, Camilo Montaña y Daniel Aguilera.
+Ángel Parra, Camilo Montaña y Daniel Gómez.
 
 **Estado:** Fase 1 (MVP), para pruebas internas del equipo.
 
