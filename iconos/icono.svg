@@ -1,15 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Fondo negro (todo el cuadro, para que funcione como ícono "maskable") -->
-  <rect width="512" height="512" fill="#0D1117"/>
-  <!-- Poste y base de la señal -->
-  <rect x="243" y="300" width="26" height="128" rx="6" fill="#FFFFFF"/>
-  <rect x="200" y="414" width="112" height="20" rx="10" fill="#FFFFFF"/>
-  <!-- Placa ámbar de seguridad con filete interior negro, como una señal reflectiva -->
-  <rect x="136" y="96" width="240" height="214" rx="34" fill="#FFC20E"/>
-  <rect x="150" y="110" width="212" height="186" rx="23" fill="none" stroke="#0D1117" stroke-width="8"/>
-  <!-- Escudo con chulo: ícono "shield-check" de Lucide (licencia ISC) -->
-  <g transform="translate(181.6 128.6) scale(6.2)" fill="none" stroke="#0D1117" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>
-    <path d="m9 12 2 2 4-4"/>
+  <!-- Paradero Seguro: señal de paradero (placa sobre poste) con escudo calado y punto de alerta.
+       Baldosa azul SITP redondeada (favicon e ícono "any"). -->
+  <rect width="512" height="512" rx="112" fill="#0B4DA2"/>
+  <g transform="translate(256 256) scale(0.8) translate(-256 -258.5)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M256 54 V96" stroke="#FFFFFF" stroke-width="34" fill="none"/>
+    <rect x="118" y="84" width="276" height="262" rx="64" fill="#FFFFFF"/>
+    <path d="M256 330 V462" stroke="#FFFFFF" stroke-width="36" fill="none"/>
+    <path d="M256 140 L330 166 V218 C330 266 299 297 256 314 C213 297 182 266 182 218 V166 Z" fill="none" stroke="#0B4DA2" stroke-width="28"/>
+    <circle cx="256" cy="222" r="25" fill="#C8102E"/>
   </g>
 </svg>

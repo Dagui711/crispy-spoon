@@ -13,7 +13,7 @@
 //
 // ⚠️ Si cambias la lista de archivos, sube el número de VERSION.
 // ============================================================
-const VERSION = "v2";
+const VERSION = "v3";
 const CACHE = `paradero-seguro-${VERSION}`;
 
 const ARCHIVOS_APP = [
@@ -32,6 +32,7 @@ const ARCHIVOS_APP = [
   "iconos/icono-180.png",
   "iconos/icono-192.png",
   "iconos/icono-512.png",
+  "iconos/icono-maskable-512.png",
 ];
 
 const LIBRERIAS = [

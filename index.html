@@ -26,7 +26,7 @@
        Barlow Condensed para títulos y placas, Barlow para el texto -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;600;700&display=swap">
 
   <!-- Leaflet: la librería del mapa, y su plugin de mapa de calor -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
@@ -38,8 +38,12 @@
 </head>
 <body class="app">
   <!-- Íconos (Lucide, licencia ISC; logo de WhatsApp de Simple Icons, CC0).
-       Se usan así: <svg class="ico"><use href="#i-nombre"/></svg> -->
+       Se usan así: <svg class="ico"><use href="#i-nombre"/></svg>
+       "i-logo" es el símbolo del equipo: sus colores salen de las variables
+       --logo-placa, --logo-escudo y --logo-punto (cambian con el tema). -->
   <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-logo" viewBox="0 0 512 512"><g stroke-linecap="round" stroke-linejoin="round"><path d="M256 54 V96" fill="none" stroke-width="34" style="stroke: var(--logo-placa)"/><rect x="118" y="84" width="276" height="262" rx="64" style="fill: var(--logo-placa)"/><path d="M256 330 V462" fill="none" stroke-width="36" style="stroke: var(--logo-placa)"/><path d="M256 140 L330 166 V218 C330 266 299 297 256 314 C213 297 182 266 182 218 V166 Z" fill="none" stroke-width="28" style="stroke: var(--logo-escudo)"/><circle cx="256" cy="222" r="25" style="fill: var(--logo-punto)"/></g></symbol>
+    <symbol id="i-timer" viewBox="0 0 24 24"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></symbol>
     <symbol id="i-siren" viewBox="0 0 24 24"><path d="M7 18v-6a5 5 0 1 1 10 0v6"/><path d="M5 21a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2z"/><path d="M21 12h1"/><path d="M18.5 4.5 18 5"/><path d="M2 12h1"/><path d="M12 2v1"/><path d="m4.929 4.929.707.707"/><path d="M12 12v6"/></symbol>
     <symbol id="i-lightbulb-off" viewBox="0 0 24 24"><path d="M16.8 11.2c.8-.9 1.2-2 1.2-3.2a6 6 0 0 0-9.3-5"/><path d="m2 2 20 20"/><path d="M6.3 6.3a4.67 4.67 0 0 0 1.2 5.2c.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></symbol>
     <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
@@ -74,7 +78,7 @@
   <div class="totem">
     <header class="encabezado">
       <div class="marca">
-        <span class="logo" aria-hidden="true"><svg class="ico"><use href="#i-shield-check"/></svg></span>
+        <svg class="logo" viewBox="108 28 296 460" aria-hidden="true" focusable="false"><use href="#i-logo" width="512" height="512"/></svg>
         <div class="marca-texto">
           <h1>Paradero Seguro</h1>
           <p class="subtitulo"><span>Paraderos SITP</span><span class="separador"> · </span><span>U. Jorge Tadeo Lozano</span></p>
@@ -86,7 +90,7 @@
 
     <!-- Pestañas de navegación -->
     <nav class="pestanas" aria-label="Secciones">
-      <button class="pestana activa" data-seccion="reportar"><span class="pestana-icono" aria-hidden="true"><svg class="ico"><use href="#i-megaphone"/></svg></span><span class="pestana-texto">Reportar</span></button>
+      <button class="pestana activa" data-seccion="reportar" aria-current="page"><span class="pestana-icono" aria-hidden="true"><svg class="ico"><use href="#i-megaphone"/></svg></span><span class="pestana-texto">Reportar</span></button>
       <button class="pestana" data-seccion="recientes"><span class="pestana-icono" aria-hidden="true"><svg class="ico"><use href="#i-history"/></svg></span><span class="pestana-texto">Recientes</span></button>
       <button class="pestana" data-seccion="mapa"><span class="pestana-icono" aria-hidden="true"><svg class="ico"><use href="#i-map"/></svg></span><span class="pestana-texto">Mapa</span></button>
       <button class="pestana" data-seccion="resumen"><span class="pestana-icono" aria-hidden="true"><svg class="ico"><use href="#i-chart-column"/></svg></span><span class="pestana-texto">Resumen</span></button>
@@ -136,10 +140,12 @@
           </li>
         </ol>
 
-        <p id="mensaje-error" class="mensaje-error" role="alert" hidden></p>
-
-        <button type="submit" id="boton-enviar" class="boton-principal">Enviar reporte</button>
-        <p class="nota nota-anonimo"><svg class="ico" aria-hidden="true"><use href="#i-shield-check"/></svg>Es anónimo: sin nombre, correo ni ubicación.</p>
+        <!-- Zona de envío: en celular se queda pegada abajo al elegir categoría -->
+        <div class="envio">
+          <p id="mensaje-error" class="mensaje-error" role="alert" hidden></p>
+          <button type="submit" id="boton-enviar" class="boton-principal">Enviar reporte</button>
+          <p class="nota nota-anonimo"><svg class="ico" aria-hidden="true"><use href="#i-shield-check"/></svg>Es anónimo · máximo 1 reporte cada 2 min</p>
+        </div>
       </form>
 
       <!-- Pantalla de confirmación (como en el prototipo de Figma) -->
@@ -172,6 +178,7 @@
           <li><strong>La comunidad confirma</strong> si sigue o si ya se resolvió.</li>
         </ol>
         <p class="guia-nota"><svg class="ico" aria-hidden="true"><use href="#i-shield-check"/></svg>Sin nombre, sin correo, sin ubicación.</p>
+        <p class="guia-nota"><svg class="ico" aria-hidden="true"><use href="#i-timer"/></svg>1 reporte cada 2 minutos por celular.</p>
         <p class="guia-nota"><svg class="ico" aria-hidden="true"><use href="#i-phone"/></svg>¿Emergencia? Toca SOS: 123 o línea 155.</p>
       </aside>
     </section>
@@ -198,8 +205,8 @@
         </div>
         <p id="transparencia-mapa" class="transparencia"></p>
         <div class="selector-vista" role="group" aria-label="Tipo de mapa">
-          <button class="opcion-vista activa" data-vista="circulos" type="button"><svg class="ico" aria-hidden="true"><use href="#i-map-pin"/></svg>Por paradero</button>
-          <button class="opcion-vista" data-vista="calor" type="button"><svg class="ico" aria-hidden="true"><use href="#i-flame"/></svg>Mapa de calor</button>
+          <button class="opcion-vista activa" data-vista="circulos" type="button" aria-pressed="true"><svg class="ico" aria-hidden="true"><use href="#i-map-pin"/></svg>Por paradero</button>
+          <button class="opcion-vista" data-vista="calor" type="button" aria-pressed="false"><svg class="ico" aria-hidden="true"><use href="#i-flame"/></svg>Mapa de calor</button>
         </div>
         <div class="mapa-marco">
           <div id="contenedor-mapa"></div>
@@ -211,7 +218,7 @@
             <li><span class="punto nivel-1"></span>1–2</li>
             <li><span class="punto nivel-2"></span>3–5</li>
             <li><span class="punto nivel-3"></span>6 o más</li>
-            <li><span class="punto punto-cai"><svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg></span>CAI</li>
+            <li><span class="punto punto-cai" aria-hidden="true"><svg class="ico"><use href="#i-shield"/></svg>CAI</span>CAI de Policía</li>
           </ul>
           <p class="nota leyenda-calor" id="leyenda-calor" hidden>
             <span class="escala-calor" aria-hidden="true"><span>Menos</span><span>Más</span></span>
@@ -242,7 +249,7 @@
       <span class="sos-octogono" aria-hidden="true">SOS</span>
       <div>
         <h2 id="titulo-sos">¿Necesitas ayuda?</h2>
-        <p class="sos-sub">Llama directo o comparte dónde estás.</p>
+        <p class="sos-sub">Si estás en peligro, llama primero al 123.</p>
       </div>
     </div>
     <a class="boton-llamar" href="tel:123">
@@ -255,7 +262,8 @@
       <span class="llamar-texto"><strong>Línea 155</strong><small>Orientación a mujeres víctimas de violencia</small></span>
       <svg class="ico" aria-hidden="true"><use href="#i-phone"/></svg>
     </a>
-    <button id="boton-ubicacion" class="boton-secundario" type="button"><svg class="ico" aria-hidden="true"><use href="#i-map-pin"/></svg>Enviar mi ubicación por WhatsApp</button>
+    <button id="boton-ubicacion" class="boton-terciario" type="button"><svg class="ico" aria-hidden="true"><use href="#i-map-pin"/></svg>Enviar mi ubicación por WhatsApp</button>
+
     <p id="estado-ubicacion" class="nota" role="status"></p>
     <form method="dialog"><button class="boton-cerrar"><svg class="ico" aria-hidden="true"><use href="#i-x"/></svg>Cerrar</button></form>
   </dialog>

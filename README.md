@@ -47,7 +47,7 @@ python3 -m http.server 8000
 Luego abre <http://localhost:8000> en el navegador.
 
 Mientras no configures Firebase, la app arranca en **modo demo** (verás un aviso
-amarillo): los reportes se guardan solo en tu navegador. Sirve para probar la
+con franjas de precaución): los reportes se guardan solo en tu navegador. Sirve para probar la
 interfaz. Para que todo el equipo vea los mismos reportes, sigue
 [docs/GUIA-FIREBASE.md](docs/GUIA-FIREBASE.md).
 

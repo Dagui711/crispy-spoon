@@ -18,6 +18,7 @@ let categoriaElegida = null;
 let paraderos = [];
 let reportes = [];     // historial completo (2 semanas), del más nuevo al más viejo
 let hayMapa = false;
+let cuentaRegresiva = null; // intervalo de la cuenta regresiva del anti-spam
 
 const nombreParadero = (codigo) => paraderos.find((p) => p.codigo === codigo)?.nombre ?? codigo;
 
@@ -33,8 +34,13 @@ const nombreSinCodigo = (codigo) => nombreParadero(codigo).replace(codigo, "").t
 // 1. Pestañas
 // ------------------------------------------------------------
 function mostrarSeccion(nombre) {
-  document.querySelectorAll(".pestana").forEach((b) =>
-    b.classList.toggle("activa", b.dataset.seccion === nombre));
+  document.querySelectorAll(".pestana").forEach((b) => {
+    const activa = b.dataset.seccion === nombre;
+    b.classList.toggle("activa", activa);
+    // Para lectores de pantalla: cuál es la pestaña actual
+    if (activa) b.setAttribute("aria-current", "page");
+    else b.removeAttribute("aria-current");
+  });
   document.querySelectorAll(".seccion").forEach((s) =>
     s.classList.toggle("activa", s.id === nombre));
   if (nombre === "mapa") refrescarTamano();
@@ -87,6 +93,7 @@ function pintarCategorias() {
 
 function elegirCategoria(id) {
   categoriaElegida = id;
+  mostrarError(null); // si había un mensaje, ya no aplica
   document.querySelectorAll(".categoria").forEach((b) => {
     b.classList.toggle("seleccionada", b.dataset.id === id);
     b.setAttribute("aria-pressed", String(b.dataset.id === id));
@@ -114,20 +121,61 @@ function pintarParaderos() {
   }
 }
 
-function mostrarError(texto) {
+// Muestra (o esconde, con null) el mensaje del formulario.
+// "espera" = true lo pinta como AVISO ámbar (anti-spam) y no como error rojo.
+function mostrarError(texto, espera = false) {
   const caja = $("mensaje-error");
-  caja.textContent = texto;
+  caja.textContent = texto ?? "";
+  caja.classList.toggle("es-espera", Boolean(texto) && espera);
   caja.hidden = !texto;
 }
 
-// Revisa el formulario. Devuelve un texto de error, o null si todo está bien.
+// Revisa el formulario. Devuelve { texto, campo } con el error y el campo
+// que falta, o null si todo está bien.
 function validar(paraderoId, descripcion) {
-  if (!paraderoId) return "Elige el paradero.";
-  if (!categoriaElegida) return "Elige qué está pasando.";
+  if (!paraderoId) return { texto: "Elige el paradero.", campo: $("campo-paradero") };
+  if (!categoriaElegida) return { texto: "Elige qué está pasando.", campo: document.querySelector(".categoria") };
   if (categoriaElegida === "otro" && descripcion === "") {
-    return "Cuéntanos brevemente qué pasa (categoría «Otro»).";
+    return { texto: "Cuéntanos brevemente qué pasa (categoría «Otro»).", campo: $("campo-descripcion") };
   }
   return null;
+}
+
+// Lleva a la persona al campo que falta (sin animación si pidió menos movimiento)
+function llevarA(campo) {
+  if (!campo) return;
+  const menosMovimiento = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  campo.focus({ preventScroll: true });
+  campo.scrollIntoView({ block: "center", behavior: menosMovimiento ? "auto" : "smooth" });
+}
+
+// --- Cuenta regresiva del anti-spam: el botón dice "Espera 1:45" ---
+function detenerCuentaRegresiva() {
+  clearInterval(cuentaRegresiva);
+  cuentaRegresiva = null;
+  const boton = $("boton-enviar");
+  boton.classList.remove("esperando");
+  boton.disabled = false;
+  boton.textContent = "Enviar reporte";
+}
+
+function iniciarCuentaRegresiva(segundos) {
+  clearInterval(cuentaRegresiva);
+  const boton = $("boton-enviar");
+  const fin = Date.now() + segundos * 1000;
+  const pintar = () => {
+    const faltan = Math.max(0, Math.ceil((fin - Date.now()) / 1000));
+    if (faltan === 0) {
+      detenerCuentaRegresiva();
+      if ($("mensaje-error").classList.contains("es-espera")) mostrarError(null);
+      return;
+    }
+    boton.textContent = `Espera ${Math.floor(faltan / 60)}:${String(faltan % 60).padStart(2, "0")}`;
+  };
+  boton.disabled = true;
+  boton.classList.add("esperando");
+  pintar();
+  cuentaRegresiva = setInterval(pintar, 1000);
 }
 
 async function enviarReporte(evento) {
@@ -136,8 +184,11 @@ async function enviarReporte(evento) {
   const descripcion = $("campo-descripcion").value.trim();
 
   const error = validar(paraderoId, descripcion);
-  mostrarError(error);
-  if (error) return;
+  mostrarError(error?.texto ?? null);
+  if (error) {
+    llevarA(error.campo);
+    return;
+  }
 
   const boton = $("boton-enviar");
   boton.disabled = true;
@@ -147,11 +198,9 @@ async function enviarReporte(evento) {
     mostrarConfirmacion(paraderoId, categoriaElegida);
   } catch (e) {
     if (e instanceof EsperaError) {
-      // No es un error del sistema: es el anti-spam funcionando
-      const min = Math.floor(e.segundos / 60);
-      const seg = e.segundos % 60;
-      const tiempo = [min > 0 ? `${min} min` : "", seg > 0 ? `${seg} s` : ""].filter(Boolean).join(" ");
-      mostrarError(`Para evitar reportes repetidos, espera ${tiempo} antes de enviar otro.`);
+      // No es un error del sistema: es el anti-spam funcionando (aviso ámbar)
+      mostrarError("Ya enviaste un reporte hace poco. Podrás enviar otro cuando termine la cuenta.", true);
+      iniciarCuentaRegresiva(e.segundos);
     } else if (e.message.includes("Anónimo")) {
       console.error(e);
       mostrarError(e.message);
@@ -160,8 +209,11 @@ async function enviarReporte(evento) {
       mostrarError("No se pudo enviar el reporte. Revisa tu conexión e intenta de nuevo.");
     }
   } finally {
-    boton.disabled = false;
-    boton.textContent = "Enviar reporte";
+    // Si arrancó la cuenta regresiva, ella misma reactiva el botón al llegar a 0
+    if (!cuentaRegresiva) {
+      boton.disabled = false;
+      boton.textContent = "Enviar reporte";
+    }
   }
 }
 
@@ -187,6 +239,7 @@ function mostrarConfirmacion(paraderoId, categoria) {
 }
 
 function reiniciarFormulario() {
+  detenerCuentaRegresiva();
   $("form-reporte").reset();
   $("contador-caracteres").textContent = "0";
   categoriaElegida = null;
@@ -276,7 +329,12 @@ function pintarListaReportes() {
         boton.disabled = true;
         if (miVoto === tipo) {
           boton.classList.add("votado");
-          boton.textContent += " · tu voto";
+          // Placa "TU VOTO" sobre el borde del botón (el espacio separa
+          // las palabras para los lectores de pantalla)
+          const placa = document.createElement("span");
+          placa.className = "placa-voto";
+          placa.textContent = "Tu voto";
+          boton.append(" ", placa);
         }
       }
       boton.addEventListener("click", () => votar(r.id, tipo, li));
@@ -305,7 +363,10 @@ async function votar(reporteId, tipo, li) {
 document.querySelectorAll(".opcion-vista").forEach((boton) =>
   boton.addEventListener("click", () => {
     const vista = boton.dataset.vista;
-    document.querySelectorAll(".opcion-vista").forEach((b) => b.classList.toggle("activa", b === boton));
+    document.querySelectorAll(".opcion-vista").forEach((b) => {
+      b.classList.toggle("activa", b === boton);
+      b.setAttribute("aria-pressed", String(b === boton));
+    });
     $("leyenda-circulos").hidden = vista === "calor";
     $("leyenda-calor").hidden = vista !== "calor";
     cambiarVista(vista);
@@ -362,6 +423,9 @@ async function iniciar() {
 
   pintarCategorias();
   $("form-reporte").addEventListener("submit", enviarReporte);
+  // Al cambiar de paradero, el mensaje anterior ya no aplica
+  $("campo-paradero").addEventListener("change", () => mostrarError(null));
+
   $("campo-descripcion").addEventListener("input", (e) => {
     $("contador-caracteres").textContent = e.target.value.length;
   });
