@@ -12,6 +12,12 @@ let capaCirculos = null;
 let capaCalor = null;
 let puntosCalor = [];  // últimos puntos del calor (se aplican al mostrar la capa)
 const marcadores = {}; // codigo de paradero → marcador en el mapa
+const todosLosMarcadores = []; // paraderos y CAI (para el teclado)
+let marcadorAbierto = null;    // marcador cuya ventanita está abierta
+let autoPaneando = false;      // el mapa se está moviendo para mostrar una ventanita
+
+// ¿La persona pidió menos movimiento? Entonces el mapa no anima nada.
+const quieto = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // Ícono del sprite de index.html (el nombre siempre viene de nuestro código)
 const icono = (nombre, clase = "ico") =>
@@ -57,8 +63,25 @@ export function nivelPorCantidad(cantidad) {
 }
 
 export function crearMapa(idContenedor, paraderos) {
-  // El zoom va abajo a la derecha para que no tape la ventanita (popup)
-  mapa = L.map(idContenedor, { zoomControl: false }).setView(CENTRO_MAPA, 17);
+  // El zoom va abajo a la derecha para que no tape la ventanita (popup).
+  // Con "menos movimiento" no hay zoom animado, desvanecidos ni inercia.
+  const sinAnimar = quieto();
+  mapa = L.map(idContenedor, {
+    zoomControl: false,
+    zoomAnimation: !sinAnimar,
+    fadeAnimation: !sinAnimar,
+    markerZoomAnimation: !sinAnimar,
+    inertia: !sinAnimar,
+  }).setView(CENTRO_MAPA, 17);
+  if (sinAnimar) {
+    // Leaflet no trae opción para que el desplazamiento automático de la
+    // ventanita (autoPan) sea instantáneo: todo desplazamiento del mapa pasa
+    // por panBy, así que aquí se le quita la animación.
+    const panBy = mapa.panBy;
+    mapa.panBy = function (desplazamiento, opciones) {
+      return panBy.call(this, desplazamiento, { ...opciones, animate: false });
+    };
+  }
   L.control.zoom({ position: "bottomright", zoomInTitle: "Acercar", zoomOutTitle: "Alejar" }).addTo(mapa);
 
   // Las "teselas" son las imágenes del mapa base (calles), de OpenStreetMap.
@@ -88,6 +111,7 @@ export function crearMapa(idContenedor, paraderos) {
       .bindPopup(() => contenidoPopup(p, marcadores[p.codigo].cantidad ?? 0), opcionesPopup)
       .addTo(capaCirculos);
     marcadores[p.codigo].paradero = p;
+    prepararMarcador(marcadores[p.codigo]);
   }
 
   // CAI verificados (si hay en catalogos.js). Se ven en ambas vistas.
@@ -106,9 +130,12 @@ export function crearMapa(idContenedor, paraderos) {
       zIndexOffset: -1000,
     })
       .bindPopup(() => {
+        // Misma cabecera de placa que el popup del paradero ("481A00 · PARADERO SITP")
         const div = document.createElement("div");
-        div.className = "popup-paradero";
-        div.innerHTML = `<strong class="popup-nombre"></strong>
+        div.className = "popup-paradero popup-cai";
+        div.innerHTML = `
+          <div class="popup-cabeza"><span class="cai-placa" aria-hidden="true">${icono("shield")}CAI</span><span class="popup-codigo">CAI de Policía</span></div>
+          <strong class="popup-nombre"></strong>
           <a class="popup-enlace" target="_blank" rel="noopener">${icono("footprints")}<span>Cómo llegar</span>${icono("arrow-up-right", "ico ico-ir")}</a>`;
         div.querySelector("strong").textContent = cai.nombre;
         div.querySelector("a").href = enlaceComoLlegar(cai.lat, cai.lng);
@@ -116,7 +143,10 @@ export function crearMapa(idContenedor, paraderos) {
       }, opcionesPopup)
       .addTo(mapa);
     marcadorCai.getElement()?.setAttribute("aria-label", cai.nombre);
+    prepararMarcador(marcadorCai);
   }
+
+  prepararTeclado();
 
   // El plugin de calor puede no cargar (sin internet); el resto sigue funcionando
   if (typeof L.heatLayer === "function") {
@@ -130,7 +160,7 @@ export function crearMapa(idContenedor, paraderos) {
 
 // Marcador con forma de señal de paradero: una placa con el número de
 // reportes (color según el nivel) y el código del paradero, sobre un poste.
-// Mide ~68×44 px (todo el recuadro se puede tocar).
+// Mide ~74×44 px (todo el recuadro se puede tocar).
 // Su aspecto está en css/estilos.css (.marcador-conteo).
 function iconoConteo(cantidad, codigo) {
   // El código viene de la base de datos: se escapa antes de meterlo en HTML
@@ -141,11 +171,85 @@ function iconoConteo(cantidad, codigo) {
       `<span class="marcador-placa"><span class="marcador-num">${cantidad}</span>` +
       `<span class="marcador-codigo">${codigoSeguro}</span></span>` +
       `<span class="marcador-poste"></span></div>`,
-    iconSize: [68, 44],
-    iconAnchor: [34, 44], // la base del poste cae justo en el paradero
+    iconSize: [74, 44],
+    iconAnchor: [37, 44], // la base del poste cae justo en el paradero
     popupAnchor: [0, -40],
-
   });
+}
+
+// ------------------------------------------------------------
+// Teclado: los marcadores se recorren con Tab y se abren con Enter
+// ------------------------------------------------------------
+function prepararMarcador(marcador) {
+  todosLosMarcadores.push(marcador);
+  marcador.on("popupopen", (e) => alAbrirVentanita(marcador, e.popup));
+  marcador.on("popupclose", () => {
+    if (marcadorAbierto === marcador) marcadorAbierto = null;
+  });
+}
+
+function prepararTeclado() {
+  const contenedor = mapa.getContainer();
+  mapa.on("autopanstart", () => (autoPaneando = true));
+  mapa.on("moveend", () => (autoPaneando = false));
+
+  // Al llegar con Tab a un marcador que está recortado por el borde del mapa,
+  // el mapa se mueve hasta mostrarlo completo
+  contenedor.addEventListener("focusin", (e) => {
+    const el = e.target;
+    if (!el.classList.contains("leaflet-marker-icon") || !el.matches(":focus-visible")) return;
+    const marcador = todosLosMarcadores.find((m) => m.getElement() === el);
+    if (marcador) mostrarMarcador(marcador, el);
+  });
+
+  // Escape cierra la ventanita y devuelve el foco al marcador
+  contenedor.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape" || !marcadorAbierto) return;
+    const marcador = marcadorAbierto;
+    mapa.closePopup();
+    marcador.getElement()?.focus();
+  });
+}
+
+function mostrarMarcador(marcador, el) {
+  const margen = 12;
+  const caja = mapa.getContainer().getBoundingClientRect();
+  const r = el.getBoundingClientRect();
+  const dentro = r.left - caja.left >= margen && r.top - caja.top >= margen &&
+    caja.right - r.right >= margen && caja.bottom - r.bottom >= margen;
+  if (dentro) return; // ya se ve: el navegador hizo el resto al enfocarlo
+  // El punto del marcador no es el centro del dibujo (en los paraderos es la
+  // base del poste): el margen se calcula con el recuadro real del ícono
+  const punto = mapa.latLngToContainerPoint(marcador.getLatLng());
+  const izq = punto.x - (r.left - caja.left), arriba = punto.y - (r.top - caja.top);
+  const der = r.right - caja.left - punto.x, abajo = r.bottom - caja.top - punto.y;
+  // Cuando el mapa termine de moverse, la página también lo deja a la vista
+  const verEnPagina = () => el.scrollIntoView({ block: "nearest", behavior: quieto() ? "auto" : "smooth" });
+  let seMovio = false;
+  const alEmpezar = () => (seMovio = true);
+  mapa.once("movestart", alEmpezar);
+  mapa.once("moveend", verEnPagina);
+  mapa.panInside(marcador.getLatLng(), {
+    paddingTopLeft: [izq + margen, arriba + margen],
+    paddingBottomRight: [der + margen, abajo + margen],
+    animate: !quieto(),
+  });
+  // Si al final no hizo falta moverlo, no se queda esperando
+  mapa.off("movestart", alEmpezar);
+  if (!seMovio) mapa.off("moveend", verEnPagina);
+}
+
+function alAbrirVentanita(marcador, popup) {
+  marcadorAbierto = marcador;
+  const ventana = popup.getElement();
+  ventana.querySelector(".leaflet-popup-close-button")?.setAttribute("aria-label", "Cerrar");
+  // Si se abrió con el teclado (Enter sobre el marcador), el foco entra a la
+  // ventanita; así sus enlaces no quedan después de todos los demás marcadores
+  const elMarcador = marcador.getElement();
+  if (!elMarcador || elMarcador !== document.activeElement || !elMarcador.matches(":focus-visible")) return;
+  const enfocar = () => ventana.querySelector(".popup-enlace")?.focus();
+  if (autoPaneando) mapa.once("moveend", enfocar); // espera a que el mapa se acomode
+  else enfocar();
 }
 
 // Google Maps: indicaciones a pie hasta un punto

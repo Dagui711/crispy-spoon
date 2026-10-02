@@ -26,10 +26,14 @@
   --fuente-texto: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
   /* ---------- Medidas ---------- */
-  --radio-placa: 10px;
   --radio-boton: 12px;
   --radio-tarjeta: 16px;
-  --alto-barra: 68px;            /* barra de pestañas (celular), el SOS va adentro */
+  --alto-barra: 74px;            /* barra de pestañas (celular), el SOS va adentro */
+  /* Alto que ocupa la zona de envío cuando se queda pegada abajo (celular):
+     solo botón + nota, o con un mensaje encima. El scroll deja ese espacio
+     libre para que nada enfocado o elegido quede tapado. */
+  --alto-envio: 140px;
+  --alto-envio-mensaje: 240px;
   --octogono: polygon(29.3% 0, 70.7% 0, 100% 29.3%, 100% 70.7%, 70.7% 100%, 29.3% 100%, 0 70.7%, 0 29.3%);
 
   /* ---------- Íconos para CSS (Lucide, ISC), usados como máscara ---------- */
@@ -48,9 +52,10 @@
   --tinta: #0D1117;              /* texto principal */
   --tinta-2: #39414D;            /* texto secundario */
   --tinta-3: #545C69;            /* texto terciario */
-  --linea: #D8D6CE;              /* bordes decorativos */
+  --linea: #D8D6CE;              /* bordes decorativos (divisiones internas) */
+  --linea-tarjeta: #D8D6CE;      /* contorno de tarjetas */
   --linea-campo: #767C87;        /* bordes de campos (≥ 3:1) */
-  --borde-control: #D8D6CE;      /* borde de las filas de categoría (el circulito sí es ≥ 3:1) */
+  --borde-control: #A9ADB5;      /* filas de categoría y selector de vista (el circulito sí es ≥ 3:1) */
   --sombra: 0 1px 2px rgba(13, 17, 23, 0.06), 0 4px 16px -8px rgba(13, 17, 23, 0.12);
   --sombra-flotante: 0 10px 30px -8px rgba(13, 17, 23, 0.35);
   --sombra-barra: 0 -10px 30px -12px rgba(13, 17, 23, 0.18);
@@ -152,7 +157,7 @@
 
   /* Gráficos del resumen: una sola serie = un solo tono */
   --barra: #0B4DA2;
-  --barra-suave: #8FAEDD;
+  --barra-suave: #4A73B8;        /* ≥ 3:1 sobre la tarjeta y sobre la banda de noche */
   --pista: #EAE9E3;
   --eje: #B9B8B0;
   --banda-noche: #E3E7EF;
@@ -175,6 +180,7 @@
   --tinta-2: #DCE3EE;
   --tinta-3: #B4C0D2;
   --linea: #2A3850;
+  --linea-tarjeta: #45567A;
   --linea-campo: #6F7E96;
   --borde-control: #5D6B82;
   --sombra: none;
@@ -255,8 +261,8 @@
   --calor-2: #FFB61A;
   --calor-3: #FF7A1F;
   --calor-4: #FF3340;
-  --barra: #6EA8FF;
-  --barra-suave: #2D5594;
+  --barra: #8DBCFF;
+  --barra-suave: #5A8EE6;
   --pista: #1E2A3E;
   --eje: #4E5B70;
   --banda-noche: #1C2943;
@@ -272,6 +278,7 @@
     --tinta-2: #DCE3EE;
     --tinta-3: #B4C0D2;
     --linea: #2A3850;
+    --linea-tarjeta: #45567A;
     --linea-campo: #6F7E96;
     --borde-control: #5D6B82;
     --sombra: none;
@@ -352,8 +359,8 @@
     --calor-2: #FFB61A;
     --calor-3: #FF7A1F;
     --calor-4: #FF3340;
-    --barra: #6EA8FF;
-    --barra-suave: #2D5594;
+    --barra: #8DBCFF;
+    --barra-suave: #5A8EE6;
     --pista: #1E2A3E;
     --eje: #4E5B70;
     --banda-noche: #1C2943;
@@ -383,6 +390,11 @@ body {
 }
 /* Espacio para que la barra de pestañas (con el SOS adentro) no tape contenido */
 body.app { padding-bottom: calc(var(--alto-barra) + 20px + env(safe-area-inset-bottom)); }
+/* Lo mismo al moverse con Tab o al llevar algo a la vista: el navegador
+   deja libre el alto de la barra fija (en computador no hay barra abajo) */
+@media (max-width: 1023px) {
+  html { scroll-padding-bottom: calc(var(--alto-barra) + env(safe-area-inset-bottom) + 16px); }
+}
 
 a { color: var(--marca-tinta); }
 button, select, textarea, input { font: inherit; color: inherit; }
@@ -516,6 +528,9 @@ h2 { font-size: 2.125rem; text-transform: uppercase; }
   z-index: 1000; /* por encima del mapa */
   display: flex;
   gap: 2px;
+  /* Mide exactamente --alto-barra (más la zona segura del celular): así la
+     zona de envío pegada, el relleno del body y el scroll usan la misma medida */
+  min-height: calc(var(--alto-barra) + env(safe-area-inset-bottom));
   /* a la derecha queda el hueco del SOS, que vive DENTRO de la barra */
   padding: 6px 76px calc(6px + env(safe-area-inset-bottom)) 4px;
   background: var(--barra-fondo);
@@ -544,7 +559,6 @@ h2 { font-size: 2.125rem; text-transform: uppercase; }
   cursor: pointer;
 }
 .pestana-icono {
-
   display: grid;
   place-items: center;
   width: 48px;
@@ -588,7 +602,7 @@ main { max-width: 720px; margin: 0 auto; padding: 24px 16px 0; }
 
 .tarjeta {
   background: var(--superficie);
-  border: 1px solid var(--linea);
+  border: 1px solid var(--linea-tarjeta);
   border-radius: var(--radio-tarjeta);
   padding: 20px;
   box-shadow: var(--sombra);
@@ -677,6 +691,8 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 }
 .parada:has(#campo-paradero:valid)::before,
 .parada:has(.categoria.seleccionada)::before { background: var(--marca); }
+/* La parada del paso que falta también se marca en rojo */
+.parada:has([aria-invalid="true"], .con-error) .parada-marca { border-color: var(--error-borde); }
 
 /* --- Selector de paradero --- */
 .campo-select { position: relative; }
@@ -739,6 +755,8 @@ textarea {
 textarea::placeholder { color: var(--tinta-3); opacity: 1; }
 select:hover, textarea:hover { border-color: var(--tinta-2); }
 select:focus-visible, textarea:focus-visible { border-color: var(--marca); outline-offset: 2px; }
+/* Campo que falta (error de validación): borde rojo mientras dure el error */
+select[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--error-borde); }
 
 .contador {
   margin: 6px 0 0;
@@ -769,6 +787,9 @@ select:focus-visible, textarea:focus-visible { border-color: var(--marca); outli
   cursor: pointer;
 }
 .categoria:hover { border-color: var(--linea-campo); }
+/* Falta elegir categoría: todas las filas con borde rojo (en táctil no se ve
+   el anillo de foco, así que el grupo tiene que verse marcado) */
+.con-error .categoria { border-color: var(--error-borde); }
 /* Circulito de selección a la derecha */
 .categoria::after {
   content: "";
@@ -923,8 +944,11 @@ select:focus-visible, textarea:focus-visible { border-color: var(--marca); outli
 }
 .boton-principal:hover { background: var(--marca-hover); }
 .boton-principal:active { transform: translateY(1px); }
-.boton-principal:disabled { opacity: 0.75; cursor: progress; }
-.boton-principal:disabled::after { display: none; }
+/* Enviando: el botón se apaga con aria-disabled (no pierde el foco del teclado) */
+.boton-principal:disabled,
+.boton-principal[aria-disabled="true"] { opacity: 0.75; cursor: progress; }
+.boton-principal:disabled::after,
+.boton-principal[aria-disabled="true"]::after { display: none; }
 /* Cuenta regresiva del anti-spam: botón apagado, con reloj y borde ámbar */
 .boton-principal.esperando {
   opacity: 1;
@@ -961,6 +985,20 @@ select:focus-visible, textarea:focus-visible { border-color: var(--marca); outli
   }
   #form-reporte:has(.categoria.seleccionada) .envio .nota-anonimo,
   .envio:has(#mensaje-error:not([hidden])) .nota-anonimo { margin-top: 8px; }
+  .envio:has(#mensaje-error:not([hidden])) .mensaje-error { margin-bottom: 10px; }
+  /* Durante la espera del anti-spam el aviso ya explica el límite: la nota
+     se esconde para que la zona pegada no ocupe media pantalla */
+  .envio:has(#mensaje-error.es-espera:not([hidden])) .nota-anonimo { display: none; }
+
+  /* Mientras la zona de envío está pegada, el scroll (Tab, llevar a la
+     vista) deja libre su alto: la categoría elegida y el foco no quedan
+     debajo del botón */
+  html:has(#reportar.activa #form-reporte:not([hidden]) .categoria.seleccionada) {
+    scroll-padding-bottom: calc(var(--alto-barra) + env(safe-area-inset-bottom) + var(--alto-envio));
+  }
+  html:has(#reportar.activa #form-reporte:not([hidden]) .envio #mensaje-error:not([hidden])) {
+    scroll-padding-bottom: calc(var(--alto-barra) + env(safe-area-inset-bottom) + var(--alto-envio-mensaje));
+  }
   /* Mientras se escribe el detalle, el botón vuelve a su sitio (queda justo debajo) */
   #form-reporte:has(#campo-descripcion:focus) .envio {
     position: static;
@@ -996,6 +1034,7 @@ select:focus-visible, textarea:focus-visible { border-color: var(--marca); outli
 }
 .boton-secundario:hover { border-color: var(--marca); }
 .boton-secundario .ico { width: 20px; height: 20px; color: var(--marca-tinta); }
+/* Acción sólida tipo placa: MAYÚSCULA condensada, como "Enviar reporte" */
 .boton-whatsapp {
   min-height: 58px;
   border: 0;
@@ -1003,8 +1042,9 @@ select:focus-visible, textarea:focus-visible { border-color: var(--marca); outli
   color: var(--sobre-whatsapp);
   font-family: var(--fuente-senal);
   font-weight: 700;
-  font-size: 1.375rem;
-  letter-spacing: 0.02em;
+  font-size: 1.3125rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 .boton-whatsapp .ico { width: 24px; height: 24px; }
 .boton-whatsapp:hover { filter: brightness(1.08); }
@@ -1017,7 +1057,6 @@ select:focus-visible, textarea:focus-visible { border-color: var(--marca); outli
   margin: 12px 0 0;
   text-align: left;
 }
-
 .nota-anonimo .ico { width: 18px; height: 18px; color: var(--ok); }
 
 /* ============================================================
@@ -1140,7 +1179,7 @@ select:focus-visible, textarea:focus-visible { border-color: var(--marca); outli
   align-items: start;
   column-gap: 12px;
   padding: 14px 14px 12px;
-  border: 1px solid var(--linea);
+  border: 1px solid var(--linea-tarjeta);
   border-radius: var(--radio-tarjeta);
   background: var(--superficie);
   box-shadow: var(--sombra);
@@ -1296,9 +1335,10 @@ select:focus-visible, textarea:focus-visible { border-color: var(--marca); outli
   mask-image: var(--m-circle-check);
 }
 .boton-voto:hover:not(:disabled), .boton-compartir:hover { border-color: var(--marca); }
+/* Deshabilitado: borde sólido tenue. El punteado se reserva para "Sin
+   confirmar" y "Posiblemente resuelto" (señal que no depende del color). */
 .boton-voto:disabled {
   cursor: default;
-  border-style: dashed;
   border-color: var(--linea);
   background: transparent;
   color: var(--tinta-3);
@@ -1340,7 +1380,7 @@ select:focus-visible, textarea:focus-visible { border-color: var(--marca); outli
   gap: 4px;
   margin-bottom: 12px;
   padding: 4px;
-  border: 1px solid var(--linea);
+  border: 1px solid var(--borde-control);
   border-radius: 14px;
   background: var(--superficie);
 }
@@ -1370,7 +1410,7 @@ select:focus-visible, textarea:focus-visible { border-color: var(--marca); outli
   position: relative;
   isolation: isolate; /* los controles del mapa no se montan sobre la barra */
   overflow: hidden;
-  border: 1px solid var(--linea);
+  border: 1px solid var(--linea-tarjeta);
   border-radius: var(--radio-tarjeta);
   background: var(--mapa-fondo);
 }
@@ -1415,7 +1455,7 @@ select:focus-visible, textarea:focus-visible { border-color: var(--marca); outli
 }
 #contenedor-mapa .leaflet-control-attribution a { color: var(--marca-tinta); }
 
-/* Marcador: una señal de paradero (placa sobre poste), de ~68×44 px
+/* Marcador: una señal de paradero (placa sobre poste), de ~74×44 px
    (todo el recuadro se puede tocar). A la izquierda, el número de
    reportes con el color del nivel; a la derecha, el código del paradero. */
 .nivel-0 { --nivel: var(--nivel-0); --sobre-nivel: var(--sobre-nivel-0); }
@@ -1443,8 +1483,8 @@ select:focus-visible, textarea:focus-visible { border-color: var(--marca); outli
 .marcador-num {
   display: grid;
   place-items: center;
-  min-width: 24px;
-  padding: 0 5px;
+  min-width: 22px;
+  padding: 0 4px;
   background: var(--nivel);
   color: var(--sobre-nivel);
   font-family: var(--fuente-senal);
@@ -1452,15 +1492,17 @@ select:focus-visible, textarea:focus-visible { border-color: var(--marca); outli
   font-size: 1.1875rem;
   line-height: 1;
 }
+/* El código es lo que identifica la señal real del SITP: es el texto
+   más grande de la placa (más que el rótulo "CAI") */
 .marcador-codigo {
   display: grid;
   place-items: center;
-  padding: 0 5px 0 4px;
+  padding: 0 5px;
   color: var(--marcador-tinta);
   font-family: var(--fuente-senal);
   font-weight: 700;
-  font-size: 0.75rem;
-  letter-spacing: 0.03em;
+  font-size: 0.875rem;
+  letter-spacing: 0.05em;
   line-height: 1;
 }
 .marcador-poste {
@@ -1504,7 +1546,7 @@ select:focus-visible, textarea:focus-visible { border-color: var(--marca); outli
   box-shadow: 0 0 0 2px var(--cai-filete), inset 0 0 0 2px var(--cai-fondo), inset 0 0 0 3px var(--cai-filete), 0 3px 6px var(--marcador-sombra);
   font-family: var(--fuente-senal);
   font-weight: 700;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   line-height: 1;
   letter-spacing: 0.08em;
 }
@@ -1521,18 +1563,26 @@ select:focus-visible, textarea:focus-visible { border-color: var(--marca); outli
 }
 #contenedor-mapa .leaflet-popup-tip { background: var(--superficie); box-shadow: none; }
 #contenedor-mapa .leaflet-popup-content { margin: 16px; font-size: 0.9375rem; line-height: 1.4; }
+/* Cerrar (×): 44×44 px, como todo lo que se toca */
 #contenedor-mapa a.leaflet-popup-close-button {
-  top: 6px;
-  right: 6px;
-  width: 36px;
-  height: 36px;
+  top: 4px;
+  right: 4px;
+  width: 44px;
+  height: 44px;
   border-radius: 10px;
   color: var(--tinta-2);
-  font: 400 26px/34px var(--fuente-texto);
+  font: 400 28px/42px var(--fuente-texto);
 }
 #contenedor-mapa a.leaflet-popup-close-button:hover { background: var(--superficie-2); color: var(--tinta); }
 .popup-paradero { min-width: 220px; }
-.popup-cabeza { display: flex; align-items: center; gap: 8px; padding-right: 30px; }
+.popup-cabeza { display: flex; align-items: center; gap: 8px; padding-right: 40px; }
+/* En el popup del CAI, la misma placa del marcador, en pequeño */
+.popup-cabeza .cai-placa {
+  height: 24px;
+  font-size: 0.8125rem;
+  box-shadow: inset 0 0 0 2px var(--cai-fondo), inset 0 0 0 3px var(--cai-filete);
+}
+.popup-cabeza .cai-placa .ico { width: 14px; height: 14px; stroke-width: 2.5; }
 .popup-codigo {
   font-family: var(--fuente-senal);
   font-weight: 700;
@@ -1607,7 +1657,7 @@ select:focus-visible, textarea:focus-visible { border-color: var(--marca); outli
   align-items: center;
   gap: 8px;
   padding: 5px 12px 5px 5px;
-  border: 1px solid var(--linea);
+  border: 1px solid var(--linea-tarjeta);
   border-radius: 8px;
   background: var(--superficie);
   font-weight: 700;
@@ -1641,7 +1691,6 @@ select:focus-visible, textarea:focus-visible { border-color: var(--marca); outli
   margin-bottom: 10px;
   padding-top: 16px;
   background: linear-gradient(90deg, var(--calor-1), var(--calor-2), var(--calor-3), var(--calor-4)) top / 100% 10px no-repeat;
-
   border-radius: 5px 5px 0 0;
   color: var(--tinta-2);
   font-family: var(--fuente-senal);
@@ -1727,7 +1776,7 @@ select:focus-visible, textarea:focus-visible { border-color: var(--marca); outli
 
 .bloque-resumen {
   padding: 18px 16px 16px;
-  border: 1px solid var(--linea);
+  border: 1px solid var(--linea-tarjeta);
   border-radius: var(--radio-tarjeta);
   background: var(--superficie);
   box-shadow: var(--sombra);
@@ -1968,11 +2017,12 @@ select:focus-visible, textarea:focus-visible { border-color: var(--marca); outli
 .llamar-texto strong {
   font-family: var(--fuente-senal);
   font-weight: 700;
-  font-size: 1.5rem;
+  font-size: 1.375rem;
   line-height: 1.05;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
-.secundario .llamar-texto strong { font-size: 1.3125rem; }
+.secundario .llamar-texto strong { font-size: 1.25rem; }
 .llamar-texto small { font-size: 0.875rem; font-weight: 400; line-height: 1.3; }
 .secundario .llamar-texto small { color: var(--tinta-2); }
 .boton-llamar > .ico { width: 24px; height: 24px; }
@@ -2102,6 +2152,7 @@ select:focus-visible, textarea:focus-visible { border-color: var(--marca); outli
     position: relative;
     flex-direction: column;
     gap: 6px;
+    min-height: 0;
     margin-top: 22px;
     padding: 0;
     background: none;
@@ -2206,7 +2257,7 @@ select:focus-visible, textarea:focus-visible { border-color: var(--marca); outli
   #form-reporte, #confirmacion { grid-column: 1; grid-row: 1; }
   .formulario {
     padding: 34px 34px 30px;
-    border: 1px solid var(--linea);
+    border: 1px solid var(--linea-tarjeta);
     border-radius: 20px;
     background: var(--superficie);
     box-shadow: var(--sombra);
