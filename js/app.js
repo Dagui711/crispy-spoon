@@ -19,6 +19,9 @@ let paraderos = [];
 let reportes = [];     // historial completo (2 semanas), del más nuevo al más viejo
 let hayMapa = false;
 let cuentaRegresiva = null; // intervalo de la cuenta regresiva del anti-spam
+let finEspera = 0;          // cuándo termina la espera del anti-spam (ms)
+let enviando = false;       // hay un envío en curso
+let campoConError = null;   // campo marcado como inválido mientras dure el error
 
 const nombreParadero = (codigo) => paraderos.find((p) => p.codigo === codigo)?.nombre ?? codigo;
 
@@ -29,6 +32,8 @@ const icono = (nombre) => `<svg class="ico" aria-hidden="true"><use href="#i-${n
 // Algunos nombres ya traen el código ("U. Jorge Tadeo Lozano 481A00"); como el
 // código se muestra aparte en su "placa", aquí se quita para no repetirlo.
 const nombreSinCodigo = (codigo) => nombreParadero(codigo).replace(codigo, "").trim();
+// ¿La persona pidió menos movimiento? Entonces los desplazamientos son instantáneos.
+const menosMovimiento = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // ------------------------------------------------------------
 // 1. Pestañas
@@ -100,6 +105,14 @@ function elegirCategoria(id) {
   });
   // Si eligen "Otro", la descripción se vuelve obligatoria
   $("descripcion-opcional").textContent = id === "otro" ? "(obligatoria)" : "(opcional)";
+  // En celular, "Enviar reporte" se pega abajo en cuanto hay categoría: la
+  // fila elegida (o, con "Otro", el detalle que ahora es obligatorio) se
+  // lleva a la vista por encima de esa zona. Sin dar foco al detalle, para
+  // no abrir el teclado del celular.
+  const destino = id === "otro"
+    ? $("campo-descripcion").closest(".parada")
+    : document.querySelector(`.categoria[data-id="${id}"]`);
+  destino.scrollIntoView({ block: "nearest", behavior: menosMovimiento() ? "auto" : "smooth" });
 }
 
 function pintarParaderos() {
@@ -128,6 +141,25 @@ function mostrarError(texto, espera = false) {
   caja.textContent = texto ?? "";
   caja.classList.toggle("es-espera", Boolean(texto) && espera);
   caja.hidden = !texto;
+  marcarInvalido(null);
+}
+
+// Marca (o desmarca, con null) el campo que falta mientras dure el error:
+// aria-invalid y aria-describedby para lectores de pantalla, y un borde rojo
+// visible (en táctil no se ve el anillo de foco). Para las categorías se
+// marca el grupo completo (fieldset).
+function marcarInvalido(campo) {
+  for (const el of document.querySelectorAll("#form-reporte [aria-invalid], #form-reporte .con-error")) {
+    el.removeAttribute("aria-invalid");
+    el.removeAttribute("aria-describedby");
+    el.classList.remove("con-error");
+  }
+  campoConError = campo;
+  if (!campo) return;
+  const marcado = campo.closest("fieldset") ?? campo;
+  if (marcado === campo) campo.setAttribute("aria-invalid", "true");
+  else marcado.classList.add("con-error");
+  marcado.setAttribute("aria-describedby", "mensaje-error");
 }
 
 // Revisa el formulario. Devuelve { texto, campo } con el error y el campo
@@ -144,27 +176,43 @@ function validar(paraderoId, descripcion) {
 // Lleva a la persona al campo que falta (sin animación si pidió menos movimiento)
 function llevarA(campo) {
   if (!campo) return;
-  const menosMovimiento = matchMedia("(prefers-reduced-motion: reduce)").matches;
   campo.focus({ preventScroll: true });
-  campo.scrollIntoView({ block: "center", behavior: menosMovimiento ? "auto" : "smooth" });
+  campo.scrollIntoView({ block: "center", behavior: menosMovimiento() ? "auto" : "smooth" });
 }
 
 // --- Cuenta regresiva del anti-spam: el botón dice "Espera 1:45" ---
+// El botón queda "apagado" con aria-disabled (no con disabled): así no pierde
+// el foco del teclado y el lector de pantalla lo sigue encontrando.
+const segundosDeEspera = () => Math.max(0, Math.ceil((finEspera - Date.now()) / 1000));
+
+// "1 min 45 s", "2 min", "40 s": se lee bien en voz alta (no como una hora)
+function textoEspera(segundos) {
+  const min = Math.floor(segundos / 60);
+  const seg = segundos % 60;
+  return [min && `${min} min`, seg && `${seg} s`].filter(Boolean).join(" ") || "0 s";
+}
+
+// Aviso ámbar con el tiempo que falta. Se escribe una sola vez (no cada
+// segundo) para que el lector de pantalla no lo repita sin parar.
+function avisarEspera() {
+  mostrarError(`Ya enviaste un reporte. Podrás enviar otro en ${textoEspera(segundosDeEspera())}.`, true);
+}
+
 function detenerCuentaRegresiva() {
   clearInterval(cuentaRegresiva);
   cuentaRegresiva = null;
   const boton = $("boton-enviar");
   boton.classList.remove("esperando");
-  boton.disabled = false;
+  boton.removeAttribute("aria-disabled");
   boton.textContent = "Enviar reporte";
 }
 
 function iniciarCuentaRegresiva(segundos) {
   clearInterval(cuentaRegresiva);
   const boton = $("boton-enviar");
-  const fin = Date.now() + segundos * 1000;
+  finEspera = Date.now() + segundos * 1000;
   const pintar = () => {
-    const faltan = Math.max(0, Math.ceil((fin - Date.now()) / 1000));
+    const faltan = segundosDeEspera();
     if (faltan === 0) {
       detenerCuentaRegresiva();
       if ($("mensaje-error").classList.contains("es-espera")) mostrarError(null);
@@ -172,7 +220,7 @@ function iniciarCuentaRegresiva(segundos) {
     }
     boton.textContent = `Espera ${Math.floor(faltan / 60)}:${String(faltan % 60).padStart(2, "0")}`;
   };
-  boton.disabled = true;
+  boton.setAttribute("aria-disabled", "true");
   boton.classList.add("esperando");
   pintar();
   cuentaRegresiva = setInterval(pintar, 1000);
@@ -180,18 +228,25 @@ function iniciarCuentaRegresiva(segundos) {
 
 async function enviarReporte(evento) {
   evento.preventDefault(); // evita que la página se recargue
+  if (enviando) return;     // ya hay un envío en curso
+  if (cuentaRegresiva) {    // anti-spam: el botón está apagado; se recuerda cuánto falta
+    avisarEspera();
+    return;
+  }
   const paraderoId = $("campo-paradero").value;
   const descripcion = $("campo-descripcion").value.trim();
 
   const error = validar(paraderoId, descripcion);
   mostrarError(error?.texto ?? null);
   if (error) {
+    marcarInvalido(error.campo);
     llevarA(error.campo);
     return;
   }
 
   const boton = $("boton-enviar");
-  boton.disabled = true;
+  enviando = true;
+  boton.setAttribute("aria-disabled", "true");
   boton.textContent = "Enviando…";
   try {
     await motor.crearReporte({ paraderoId, categoria: categoriaElegida, descripcion });
@@ -199,8 +254,8 @@ async function enviarReporte(evento) {
   } catch (e) {
     if (e instanceof EsperaError) {
       // No es un error del sistema: es el anti-spam funcionando (aviso ámbar)
-      mostrarError("Ya enviaste un reporte hace poco. Podrás enviar otro cuando termine la cuenta.", true);
       iniciarCuentaRegresiva(e.segundos);
+      avisarEspera();
     } else if (e.message.includes("Anónimo")) {
       console.error(e);
       mostrarError(e.message);
@@ -209,9 +264,10 @@ async function enviarReporte(evento) {
       mostrarError("No se pudo enviar el reporte. Revisa tu conexión e intenta de nuevo.");
     }
   } finally {
+    enviando = false;
     // Si arrancó la cuenta regresiva, ella misma reactiva el botón al llegar a 0
     if (!cuentaRegresiva) {
-      boton.disabled = false;
+      boton.removeAttribute("aria-disabled");
       boton.textContent = "Enviar reporte";
     }
   }
@@ -428,6 +484,8 @@ async function iniciar() {
 
   $("campo-descripcion").addEventListener("input", (e) => {
     $("contador-caracteres").textContent = e.target.value.length;
+    // Si el error era que faltaba el detalle (categoría "Otro"), ya no aplica
+    if (campoConError === e.target && e.target.value.trim()) mostrarError(null);
   });
   $("boton-otro").addEventListener("click", reiniciarFormulario);
   $("boton-ver-mapa").addEventListener("click", () => {

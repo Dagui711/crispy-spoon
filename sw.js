@@ -13,7 +13,7 @@
 //
 // ⚠️ Si cambias la lista de archivos, sube el número de VERSION.
 // ============================================================
-const VERSION = "v3";
+const VERSION = "v4";
 const CACHE = `paradero-seguro-${VERSION}`;
 
 const ARCHIVOS_APP = [
@@ -29,6 +29,7 @@ const ARCHIVOS_APP = [
   "js/resumen.js",
   "manifest.webmanifest",
   "iconos/icono.svg",
+  "iconos/favicon.svg",
   "iconos/icono-180.png",
   "iconos/icono-192.png",
   "iconos/icono-512.png",
