@@ -10,11 +10,43 @@ import { CENTRO_MAPA, CAIS } from "./catalogos.js";
 let mapa = null;
 let capaCirculos = null;
 let capaCalor = null;
+let puntosCalor = [];  // últimos puntos del calor (se aplican al mostrar la capa)
 const marcadores = {}; // codigo de paradero → marcador en el mapa
 
 // Ícono del sprite de index.html (el nombre siempre viene de nuestro código)
 const icono = (nombre, clase = "ico") =>
   `<svg class="${clase}" aria-hidden="true"><use href="#i-${nombre}"/></svg>`;
+
+// --- El mapa y la barra del navegador siguen al tema (claro / noche) ---
+// Los colores salen de las variables de css/estilos.css, así que aquí no
+// hay colores escritos a mano.
+const token = (nombre) => getComputedStyle(document.documentElement).getPropertyValue(nombre).trim();
+
+// Escala del mapa de calor: de ámbar (pocos) a rojo (muchos)
+function degradadoCalor() {
+  return { 0.25: token("--calor-1"), 0.5: token("--calor-2"), 0.75: token("--calor-3"), 1: token("--calor-4") };
+}
+
+// meta theme-color: si la persona eligió tema con el botón, manda ese;
+// si no, cada meta conserva su media query (sigue al celular).
+function sincronizarColorTema() {
+  const elegido = document.documentElement.dataset.tema;
+  const color = token("--color-tema");
+  for (const meta of document.querySelectorAll('meta[name="theme-color"]')) {
+    meta.dataset.original ??= meta.content;
+    meta.content = elegido && color ? color : meta.dataset.original;
+  }
+}
+
+function alCambiarTema() {
+  // leaflet.heat solo puede redibujar si la capa está en el mapa; si no lo
+  // está, el degradado nuevo se aplica al mostrarla (ver cambiarVista)
+  if (capaCalor && mapa?.hasLayer(capaCalor)) capaCalor.setOptions({ gradient: degradadoCalor() });
+  sincronizarColorTema();
+}
+new MutationObserver(alCambiarTema).observe(document.documentElement, { attributes: true, attributeFilter: ["data-tema"] });
+matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", alCambiarTema);
+sincronizarColorTema();
 
 // Convierte una cantidad de reportes en un nivel de color (0 a 3)
 export function nivelPorCantidad(cantidad) {
@@ -38,10 +70,11 @@ export function crearMapa(idContenedor, paraderos) {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   }).addTo(mapa);
 
-  // Margen para que, al abrir una ventanita, el mapa se mueva y no quede cortada
+  // Margen para que, al abrir una ventanita, el mapa se mueva y no quede
+  // cortada ni tapada por los botones de zoom (abajo a la derecha)
   const opcionesPopup = {
-    autoPanPaddingTopLeft: L.point(16, 16),
-    autoPanPaddingBottomRight: L.point(64, 16),
+    autoPanPaddingTopLeft: L.point(16, 24),
+    autoPanPaddingBottomRight: L.point(64, 24),
     maxWidth: 280,
   };
 
@@ -58,9 +91,19 @@ export function crearMapa(idContenedor, paraderos) {
   }
 
   // CAI verificados (si hay en catalogos.js). Se ven en ambas vistas.
+  // Son una placa de servicio rotulada "CAI" (sin número ni poste), y van
+  // por DEBAJO de los paraderos (zIndexOffset) para no tapar ninguno.
   for (const cai of CAIS) {
-    L.marker([cai.lat, cai.lng], {
-      icon: L.divIcon({ className: "", html: `<div class="marcador-cai">${icono("shield")}</div>`, iconSize: [34, 34], iconAnchor: [17, 17] }),
+    const marcadorCai = L.marker([cai.lat, cai.lng], {
+      icon: L.divIcon({
+        className: "",
+        html: `<div class="marcador-cai"><span class="cai-placa">${icono("shield")}CAI</span></div>`,
+        iconSize: [60, 44], // recuadro táctil de 44 px de alto
+        iconAnchor: [30, 22],
+        popupAnchor: [0, -14],
+      }),
+      title: cai.nombre,
+      zIndexOffset: -1000,
     })
       .bindPopup(() => {
         const div = document.createElement("div");
@@ -72,20 +115,22 @@ export function crearMapa(idContenedor, paraderos) {
         return div;
       }, opcionesPopup)
       .addTo(mapa);
+    marcadorCai.getElement()?.setAttribute("aria-label", cai.nombre);
   }
 
   // El plugin de calor puede no cargar (sin internet); el resto sigue funcionando
   if (typeof L.heatLayer === "function") {
     capaCalor = L.heatLayer([], {
       radius: 45, blur: 30, maxZoom: 17, minOpacity: 0.35,
-      // Escala de un solo sentido: ámbar (pocos) → rojo (muchos)
-      gradient: { 0.25: "#ffd84d", 0.5: "#ffb000", 0.75: "#f06414", 1: "#d0202e" },
+      // Escala de un solo sentido: ámbar (pocos) → rojo (muchos), según el tema
+      gradient: degradadoCalor(),
     });
   }
 }
 
 // Marcador con forma de señal de paradero: una placa con el número de
 // reportes (color según el nivel) y el código del paradero, sobre un poste.
+// Mide ~68×44 px (todo el recuadro se puede tocar).
 // Su aspecto está en css/estilos.css (.marcador-conteo).
 function iconoConteo(cantidad, codigo) {
   // El código viene de la base de datos: se escapa antes de meterlo en HTML
@@ -96,9 +141,10 @@ function iconoConteo(cantidad, codigo) {
       `<span class="marcador-placa"><span class="marcador-num">${cantidad}</span>` +
       `<span class="marcador-codigo">${codigoSeguro}</span></span>` +
       `<span class="marcador-poste"></span></div>`,
-    iconSize: [84, 54],
-    iconAnchor: [42, 54], // la base del poste cae justo en el paradero
-    popupAnchor: [0, -50],
+    iconSize: [68, 44],
+    iconAnchor: [34, 44], // la base del poste cae justo en el paradero
+    popupAnchor: [0, -40],
+
   });
 }
 
@@ -136,7 +182,7 @@ function contenidoPopup(p, cantidad) {
 
 // Recibe { "481A00": 3, "504A00": 0, ... } y actualiza círculos y calor
 export function actualizarMapa(conteoPorParadero) {
-  const puntosCalor = [];
+  const puntos = [];
   const maximo = Math.max(1, ...Object.values(conteoPorParadero));
   for (const [codigo, marcador] of Object.entries(marcadores)) {
     const cantidad = conteoPorParadero[codigo] ?? 0;
@@ -144,10 +190,13 @@ export function actualizarMapa(conteoPorParadero) {
     marcador.setIcon(iconoConteo(cantidad, codigo));
     if (cantidad > 0) {
       const p = marcador.paradero;
-      puntosCalor.push([p.lat, p.lng, cantidad / maximo]);
+      puntos.push([p.lat, p.lng, cantidad / maximo]);
     }
   }
-  if (capaCalor) capaCalor.setLatLngs(puntosCalor);
+  puntosCalor = puntos;
+  // leaflet.heat falla si se redibuja estando fuera del mapa: solo se
+  // actualiza si está visible; si no, los puntos se aplican al mostrarla
+  if (capaCalor && mapa.hasLayer(capaCalor)) capaCalor.setLatLngs(puntosCalor);
 }
 
 // Cambia entre "circulos" y "calor"
@@ -156,6 +205,8 @@ export function cambiarVista(vista) {
   if (vista === "calor" && capaCalor) {
     mapa.removeLayer(capaCirculos);
     capaCalor.addTo(mapa);
+    capaCalor.setOptions({ gradient: degradadoCalor() }); // por si cambió el tema
+    capaCalor.setLatLngs(puntosCalor);                     // por si llegaron reportes
   } else {
     if (capaCalor) mapa.removeLayer(capaCalor);
     capaCirculos.addTo(mapa);
