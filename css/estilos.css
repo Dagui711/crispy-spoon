@@ -1699,8 +1699,8 @@ select[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(-
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
-.nota-mapa { display: flex; gap: 8px; margin: 14px 0 0; line-height: 1.45; }
-.nota-mapa .ico { width: 18px; height: 18px; margin-top: 1px; color: var(--marca-tinta); }
+.nota-mapa, .nota-metodologia { display: flex; gap: 8px; margin: 14px 0 0; line-height: 1.45; }
+.nota-mapa .ico, .nota-metodologia .ico { width: 18px; height: 18px; flex: none; margin-top: 1px; color: var(--marca-tinta); }
 
 /* ============================================================
    Resumen semanal

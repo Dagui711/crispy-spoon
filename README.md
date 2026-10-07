@@ -22,15 +22,28 @@ de la app, programada junto con Claude (asistente de IA de Anthropic).
 | Fase 2                                        | Estado |
 |-----------------------------------------------|--------|
 | Mapa de calor                                 | ✅ |
-| Instalable como app (PWA), abre sin conexión  | ✅ |
-| Confirmación comunitaria ("sigue así" / "ya se resolvió") | ✅ |
-| Anti-spam: 1 reporte cada 2 min por celular   | ✅ |
+| Instalable como app (PWA), con carga de la interfaz sin conexión | ✅ |
+| Confirmación comunitaria ("sigue ocurriendo" / "ya se resolvió") | ✅ |
+| Anti-spam: 1 reporte cada 2 min por sesión anónima | ✅ |
 | Botón de emergencia (123, 155, ubicación por WhatsApp) | ✅ |
 | Compartir reportes por WhatsApp               | ✅ |
 | Resumen semanal y patrones por hora / franja  | ✅ |
-| Indicador de transparencia (confirmaciones y antigüedad) | ✅ |
+| Indicador de transparencia (indicaciones de la comunidad y antigüedad) | ✅ |
 | Modo noche de alto contraste                  | ✅ |
 | Cómo llegar y CAI cercano (Google Maps)       | ✅ |
+
+## Alcance y limitaciones
+
+- **Los datos son reportes de la comunidad.** Son reportes voluntarios hechos en la app:
+  no son un registro oficial ni incluyen todos los incidentes que ocurren. Con pocos
+  reportes, los patrones del Resumen son una referencia, no una conclusión.
+- **La confirmación es comunitaria, no oficial.** "Sigue ocurriendo" y "Ya se resolvió"
+  indican lo que dicen otras personas; nadie verifica el incidente.
+- **El límite es por sesión anónima.** El anti-spam (1 reporte cada 2 min) y el voto único
+  usan la identidad anónima que Firebase guarda en el navegador. Si alguien borra los datos
+  del navegador, recibe una identidad nueva. Es el costo de permitir participar sin registro.
+- **Sin conexión solo carga la interfaz.** Enviar reportes, ver reportes nuevos, votar y
+  cargar zonas nuevas del mapa necesitan internet.
 
 ## Cómo probarla en tu computador
 
@@ -58,7 +71,7 @@ interfaz. Para que todo el equipo vea los mismos reportes, sigue
 
 ```
 crispy-spoon/
-├── index.html          ← la página: estructura de las 3 pestañas
+├── index.html          ← la página: estructura de las 4 pestañas
 ├── css/
 │   └── estilos.css     ← colores, tamaños y diseño
 ├── js/
@@ -70,7 +83,7 @@ crispy-spoon/
 │   ├── catalogos.js    ← datos fijos: categorías y lista semilla de paraderos
 │   └── config.js       ← configuración de Firebase (la pegas tú)
 ├── sembrar.html        ← página de un solo uso: crea los paraderos en Firestore
-├── sw.js               ← service worker (PWA: instalar y abrir sin conexión)
+├── sw.js               ← service worker (PWA: instalar y cargar la interfaz sin conexión)
 ├── manifest.webmanifest← nombre, colores e íconos de la app instalada
 ├── iconos/             ← ícono de la app
 ├── firestore.rules     ← reglas de seguridad de la base de datos
@@ -95,7 +108,10 @@ lo guarda y avisa a todos los que tienen la app abierta → `app.js` repinta la 
 
 - **HTML, CSS y JavaScript** puros (sin frameworks), para que el código sea fácil de leer.
 - **Firebase Firestore**: base de datos en la nube, en tiempo real.
-- **Leaflet** + **OpenStreetMap**: mapa gratuito y de código abierto.
+- **Firebase Authentication** (acceso anónimo): identidad sin registro para el anti-spam y los votos.
+- **Leaflet** + **OpenStreetMap**: mapa gratuito y de código abierto (con **leaflet.heat** para el mapa de calor).
+- Las librerías externas se cargan desde CDN con **versiones fijadas**: Leaflet 1.9.4,
+  leaflet.heat 0.2.0 y Firebase 11.0.2.
 
 ## Pendientes
 

@@ -40,19 +40,22 @@ export function tiempoRelativo(fecha) {
 
 // ------------------------------------------------------------
 // Indicador de transparencia: ¿qué tan confiable es cada reporte?
-// Combina dos cosas: cuántas personas lo confirmaron y qué tan viejo es.
+// Combina dos cosas: qué indicó la comunidad ("sigue ocurriendo" o "ya se
+// resolvió") y qué tan viejo es. Es confirmación comunitaria, no verificación oficial.
 // ------------------------------------------------------------
 export function estadoReporte(r) {
   if (r.resuelto > 0 && r.resuelto >= r.vigente) {
-    return { id: "resuelto", texto: `Posiblemente resuelto (${r.resuelto})` };
+    return { id: "resuelto", texto: r.resuelto === 1
+      ? "1 persona indica que ya se resolvió"
+      : `${r.resuelto} personas indican que ya se resolvió` };
   }
   if (r.vigente >= 2) {
-    return { id: "confirmado", texto: `Confirmado por ${r.vigente} personas` };
+    return { id: "confirmado", texto: `${r.vigente} personas indican que sigue ocurriendo` };
   }
   if (r.vigente === 1) {
-    return { id: "confirmado", texto: "Confirmado por 1 persona" };
+    return { id: "confirmado", texto: "1 persona indica que sigue ocurriendo" };
   }
-  return { id: "sin-confirmar", texto: "Sin confirmar" };
+  return { id: "sin-confirmar", texto: "Sin indicaciones aún" };
 }
 
 export function frescura(r) {

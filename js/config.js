@@ -31,7 +31,7 @@ export const DIAS_RECIENTES = 7;
 // descargamos 2 semanas de reportes.
 export const DIAS_HISTORIAL = 14;
 
-// Anti-spam: minutos de espera entre reportes de un mismo celular.
+// Anti-spam: minutos de espera entre reportes de una misma sesión anónima.
 // ⚠️ Debe coincidir con duration.value(2, 'm') en firestore.rules.
 export const ESPERA_MINUTOS = 2;
 

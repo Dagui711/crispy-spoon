@@ -281,7 +281,7 @@ function enlaceWhatsApp(texto) {
 function textoParaCompartir(paraderoId, categoria, cuando) {
   const cat = categoriaPorId(categoria);
   return `⚠️ ${cat.icono} ${cat.nombre} en el paradero ${nombreParadero(paraderoId)} (${paraderoId}), ${cuando}\n` +
-    `Mira los reportes o confirma si sigue: ${URL_PUBLICA}?paradero=${paraderoId}`;
+    `Mira los reportes o indica si sigue ocurriendo: ${URL_PUBLICA}?paradero=${paraderoId}`;
 }
 
 function mostrarConfirmacion(paraderoId, categoria) {
@@ -317,7 +317,7 @@ function textoTransparencia() {
   const t = resumenTransparencia(reportes);
   if (!t.ultimo) return "Todavía no hay reportes.";
   return `${t.activos} reporte${t.activos === 1 ? "" : "s"} activo${t.activos === 1 ? "" : "s"} · ` +
-    `${t.confirmados} confirmado${t.confirmados === 1 ? "" : "s"} por la comunidad · ` +
+    `${t.confirmados} ${t.confirmados === 1 ? "sigue" : "siguen"} ocurriendo según la comunidad · ` +
     `último ${tiempoRelativo(t.ultimo)}`;
 }
 
@@ -360,7 +360,7 @@ function pintarListaReportes() {
         </div>
       </div>
       <div class="acciones-reporte">
-        <button type="button" class="boton-voto" data-tipo="vigente">Sigue así</button>
+        <button type="button" class="boton-voto" data-tipo="vigente">Sigue ocurriendo</button>
         <button type="button" class="boton-voto" data-tipo="resuelto">Ya se resolvió</button>
       </div>`;
     // Usamos textContent (no innerHTML) para el texto que escribió el usuario:
@@ -409,7 +409,7 @@ async function votar(reporteId, tipo, li) {
   } catch (e) {
     console.error(e);
     li.querySelectorAll(".boton-voto").forEach((b) => (b.disabled = false));
-    alert(e.message.includes("Anónimo") ? e.message : "No se pudo registrar tu confirmación. Intenta de nuevo.");
+    alert(e.message.includes("Anónimo") ? e.message : "No se pudo registrar tu respuesta. Intenta de nuevo.");
   }
 }
 
