@@ -294,6 +294,19 @@ function mostrarConfirmacion(paraderoId, categoria) {
   $("confirmacion").hidden = false;
 }
 
+// "Reportar aquí" (desde el mapa): abre el formulario con ese paradero ya
+// elegido, para que solo falte la categoría y, si quiere, el detalle.
+function reportarEnParadero(codigo) {
+  if (!$("confirmacion").hidden) reiniciarFormulario(); // venía de enviar uno
+  $("campo-paradero").value = codigo;
+  mostrarError(null); // igual que al cambiar el paradero a mano
+  mostrarSeccion("reportar");
+  // Se ve el formulario desde arriba (paradero elegido y categorías) y el
+  // foco queda en la primera categoría: es un botón, no abre el teclado.
+  $("form-reporte").scrollIntoView({ block: "start" });
+  document.querySelector(".categoria")?.focus({ preventScroll: true });
+}
+
 function reiniciarFormulario() {
   detenerCuentaRegresiva();
   $("form-reporte").reset();
@@ -508,7 +521,7 @@ async function iniciar() {
   // Si el mapa falla (ej: sin internet para cargar Leaflet), el resto
   // de la app debe seguir funcionando.
   try {
-    crearMapa("contenedor-mapa", paraderos);
+    crearMapa("contenedor-mapa", paraderos, { alReportar: reportarEnParadero });
     hayMapa = true;
     if (!calorDisponible()) document.querySelector('[data-vista="calor"]').hidden = true;
   } catch (e) {

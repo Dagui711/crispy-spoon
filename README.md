@@ -32,6 +32,11 @@ de la app, programada junto con Claude (asistente de IA de Anthropic).
 | Modo noche de alto contraste                  | ✅ |
 | Cómo llegar y CAI cercano (Google Maps)       | ✅ |
 
+| Para llevar a los paraderos                   | Estado |
+|-----------------------------------------------|--------|
+| «Reportar aquí» desde el mapa (paradero ya elegido) | ✅ |
+| Carteles QR de los 4 paraderos, listos para imprimir | ✅ ([`qr/carteles-paraderos.pdf`](qr/carteles-paraderos.pdf)) |
+
 ## Alcance y limitaciones
 
 - **Los datos son reportes de la comunidad.** Son reportes voluntarios hechos en la app:
@@ -47,6 +52,31 @@ de la app, programada junto con Claude (asistente de IA de Anthropic).
   paraderos, los reportes ni el mapa: los datos no se guardan para usarlos sin conexión.
   Enviar y ver reportes, votar y usar el mapa necesitan internet. Sin conexión, la app
   todavía puede decir que no hay reportes o paraderos aunque sí existan.
+
+## QR de los paraderos
+
+Cada cartel tiene un QR que abre la app en **Reportar** con su paradero ya elegido: solo
+falta tocar la categoría y enviar. Los carteles están en
+[`qr/carteles-paraderos.pdf`](qr/carteles-paraderos.pdf), uno por hoja tamaño Carta.
+
+| Paradero | Nombre                 | Dirección oficial | Enlace del QR |
+|----------|------------------------|-------------------|---------------|
+| 481A00   | U. Jorge Tadeo Lozano  | KR 5 - CL 22      | `…/crispy-spoon/?paradero=481A00` |
+| 504A00   | U. Jorge Tadeo Lozano  | KR 4 - CL 22      | `…/crispy-spoon/?paradero=504A00` |
+| 113A00   | Br. Las Nieves         | CL 24 - KR 4      | `…/crispy-spoon/?paradero=113A00` |
+| 664A00   | Estación Universidades | KR 3 - CL 21      | `…/crispy-spoon/?paradero=664A00` |
+
+Los 4 códigos se verificaron contra el conjunto de datos abiertos
+[Paraderos zonales del SITP](https://datosabiertos.bogota.gov.co/dataset/paraderos-zonales-del-sitp)
+de Bogotá: el código, el nombre y la ubicación coinciden (a menos de 10 m).
+
+- **Imprimir:** abre el PDF y usa escala 100 % ("tamaño real") con gráficos de fondo.
+- **Antes de pegarlo:** confirma que el código del cartel es el de la señal del paradero.
+  A 36 m del 664A00 hay otro paradero con el mismo nombre, el 665A00.
+- **Si cambia un paradero o la dirección de la app:** corre `pip install segno` y
+  `python qr/generar_qr.py` (lee los códigos de `js/catalogos.js` y la dirección de
+  `js/config.js`). Luego abre `qr/carteles.html` en el navegador y usa **Imprimir →
+  Guardar como PDF** (tamaño Carta, sin márgenes, con gráficos de fondo).
 
 ## Cómo probarla en tu computador
 
@@ -86,6 +116,7 @@ crispy-spoon/
 │   ├── catalogos.js    ← datos fijos: categorías y lista semilla de paraderos
 │   └── config.js       ← configuración de Firebase (la pegas tú)
 ├── sembrar.html        ← página de un solo uso: crea los paraderos en Firestore
+├── qr/                 ← QR de los paraderos (SVG y PNG), carteles para imprimir y su generador
 ├── sw.js               ← service worker (PWA: instalar y cargar la interfaz sin conexión)
 ├── manifest.webmanifest← nombre, colores e íconos de la app instalada
 ├── iconos/             ← ícono de la app
@@ -118,4 +149,5 @@ lo guarda y avisa a todos los que tienen la app abierta → `app.js` repinta la 
 
 ## Pendientes
 
-- QR de los 4 paraderos.
+- Aviso de "Sin conexión" cuando no se pueden cargar los paraderos ni los reportes
+  (ver *Alcance y limitaciones*).

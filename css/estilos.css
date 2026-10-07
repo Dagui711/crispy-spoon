@@ -613,6 +613,8 @@ main { max-width: 720px; margin: 0 auto; padding: 24px 16px 0; }
    ============================================================ */
 /* En celular el formulario va directo sobre el fondo (más ancho útil) */
 .formulario { background: none; border: 0; padding: 0; box-shadow: none; }
+/* Al llegar desde "Reportar aquí", el título del formulario no queda pegado al borde */
+#form-reporte { scroll-margin-top: 16px; }
 
 label, legend {
   display: block;
@@ -1639,7 +1641,31 @@ select[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(-
   font-weight: 600;
   text-decoration: none;
 }
-#contenedor-mapa .popup-enlace:first-of-type { background: var(--marca); border-color: var(--marca); color: var(--sobre-marca); }
+/* Acción principal de la ventanita: "Reportar aquí" en los paraderos y
+   "Cómo llegar" en los CAI (que no tienen reporte) */
+#contenedor-mapa .popup-cai .popup-enlace:first-of-type { background: var(--marca); border-color: var(--marca); color: var(--sobre-marca); }
+#contenedor-mapa .popup-reportar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  border: 2px solid var(--marca);
+  border-radius: 10px;
+  background: var(--marca);
+  color: var(--sobre-marca);
+  font-family: var(--fuente-senal);
+  font-weight: 700;
+  font-size: 1.125rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+#contenedor-mapa .popup-reportar:hover { background: var(--marca-hover); border-color: var(--marca-hover); }
+.popup-reportar .ico { width: 20px; height: 20px; }
 #contenedor-mapa .popup-enlace:hover { border-color: var(--marca); }
 .popup-enlace .ico { width: 20px; height: 20px; }
 .popup-enlace .ico-ir { width: 16px; height: 16px; margin-left: auto; opacity: 0.8; }

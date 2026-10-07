@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es-CO">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Carteles QR · Paradero Seguro</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="../iconos/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;600;700&display=swap">
+  <style>
+    /* Un cartel por hoja tamaño Carta. Los QR (qr/<codigo>.svg) los crea
+       qr/generar_qr.py; aquí solo se arma el diseño alrededor. */
+    @page { size: letter; margin: 0; }
+    :root {
+      --marca: #0B4DA2;      /* azul SITP, igual que la app */
+      --sos: #C8102E;
+      --tinta: #14171C;
+      --tinta-2: #444B57;
+      --senal: "Barlow Condensed", "Arial Narrow", sans-serif;
+      --texto: "Barlow", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      background: #E4E3DD;
+      color: var(--tinta);
+      font-family: var(--texto);
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* Indicaciones: solo en pantalla, no se imprimen */
+    .indicaciones {
+      max-width: 215.9mm;
+      margin: 24px auto 0;
+      padding: 16px 20px;
+      border-radius: 12px;
+      background: #fff;
+      line-height: 1.5;
+    }
+    .indicaciones h1 { margin: 0 0 6px; font: 700 1.5rem/1.1 var(--senal); text-transform: uppercase; letter-spacing: 0.04em; }
+    .indicaciones p { margin: 6px 0; }
+    .indicaciones button {
+      margin-top: 8px;
+      min-height: 44px;
+      padding: 8px 20px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--marca);
+      color: #fff;
+      font: 700 1.125rem var(--senal);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .cartel {
+      display: flex;
+      flex-direction: column;
+      width: 215.9mm;
+      height: 279.4mm;
+      margin: 24px auto;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+      break-after: page;
+    }
+
+    /* Cabecera azul con el logo, como la de la app */
+    .banda {
+      display: flex;
+      align-items: center;
+      gap: 6mm;
+      padding: 9mm 14mm;
+      background: var(--marca);
+      color: #fff;
+    }
+    .banda img { width: 30mm; height: 30mm; flex: none; margin: -4mm -2mm -4mm -6mm; }
+    .banda-nombre { font: 700 15mm/0.9 var(--senal); letter-spacing: 0.02em; text-transform: uppercase; }
+    .banda-sub { margin-top: 2.5mm; font: 600 4.6mm/1 var(--senal); letter-spacing: 0.14em; text-transform: uppercase; }
+
+    .cuerpo {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      align-items: center;
+      padding: 8mm 14mm 0;
+      text-align: center;
+    }
+    .etiqueta { font: 600 5mm/1 var(--senal); letter-spacing: 0.16em; text-transform: uppercase; color: var(--tinta-2); }
+    /* Placa del código, como en la app: azul con filete blanco interior */
+    .codigo {
+      margin-top: 3mm;
+      padding: 1.5mm 7mm;
+      border-radius: 3.5mm;
+      background: var(--marca);
+      box-shadow: inset 0 0 0 1.3mm var(--marca), inset 0 0 0 2mm #fff;
+      color: #fff;
+      font: 700 19mm/1 var(--senal);
+      letter-spacing: 0.06em;
+    }
+    .nombre { margin-top: 3.5mm; font: 700 10mm/1 var(--senal); text-transform: uppercase; }
+    .qr { width: 104mm; height: 104mm; margin-top: 5mm; }
+    .llamado { margin-top: 3mm; font: 700 11.5mm/1 var(--senal); text-transform: uppercase; }
+    .llamado-sub { max-width: 165mm; margin: 2.5mm 0 0; font-size: 5.2mm; line-height: 1.35; color: var(--tinta-2); }
+    .direccion { margin-top: 3mm; font-size: 4.4mm; color: var(--tinta-2); }
+
+    /* Pie de emergencia con el octágono SOS de la app */
+    .pie {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5mm;
+      margin-top: auto;
+      padding: 6mm 14mm;
+      background: var(--sos);
+      color: #fff;
+      font: 700 8.5mm/1 var(--senal);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .octagono {
+      display: grid;
+      place-items: center;
+      width: 15mm;
+      height: 15mm;
+      background: #fff;
+      clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%);
+    }
+    .octagono span {
+      display: grid;
+      place-items: center;
+      width: 13mm;
+      height: 13mm;
+      background: var(--sos);
+      clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%);
+      font-size: 4.6mm;
+      letter-spacing: 0.02em;
+    }
+
+    @media print {
+      body { background: #fff; }
+      .indicaciones { display: none; }
+      .cartel { margin: 0; box-shadow: none; }
+    }
+    @media screen and (max-width: 860px) {
+      /* En el celular el cartel se ve completo, a escala */
+      .cartel { zoom: 0.45; margin: 12px auto; }
+      .indicaciones { margin: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <section class="indicaciones">
+    <h1>Carteles QR de los paraderos</h1>
+    <p>Un cartel por hoja, tamaño <strong>Carta</strong>. Al imprimir, usa <strong>escala 100 %</strong>
+      (o "tamaño real") y activa <strong>gráficos de fondo</strong> para que salgan los colores.</p>
+    <p>Antes de pegar cada cartel, confirma que su código es el mismo que el de la señal del paradero.
+      Ojo: junto al 664A00 hay otro paradero con el mismo nombre (665A00).</p>
+    <button type="button" id="imprimir">Imprimir</button>
+  </section>
+
+  <main id="carteles"></main>
+
+  <script type="module">
+    import { PARADEROS_SEMILLA } from "../js/catalogos.js";
+    import { URL_PUBLICA } from "../js/config.js";
+
+    const contenedor = document.getElementById("carteles");
+    const plantilla = (p) => `
+      <article class="cartel" data-codigo="">
+        <header class="banda">
+          <img src="../iconos/icono.svg" alt="">
+          <div>
+            <div class="banda-nombre">Paradero Seguro</div>
+            <div class="banda-sub">Paraderos SITP · U. Jorge Tadeo Lozano</div>
+          </div>
+        </header>
+        <div class="cuerpo">
+          <div class="etiqueta">Paradero SITP</div>
+          <div class="codigo"></div>
+          <div class="nombre"></div>
+          <img class="qr" alt="">
+          <div class="llamado">¿Ves algo inseguro? Repórtalo</div>
+          <p class="llamado-sub">Escanea con la cámara del celular: el reporte es anónimo, sin registro,
+            y este paradero ya queda elegido.</p>
+          <div class="direccion"></div>
+        </div>
+        <footer class="pie"><span class="octagono" aria-hidden="true"><span>SOS</span></span>¿Emergencia? Llama al 123</footer>
+      </article>`;
+
+    for (const p of PARADEROS_SEMILLA) {
+      contenedor.insertAdjacentHTML("beforeend", plantilla(p));
+      const cartel = contenedor.lastElementChild;
+      cartel.dataset.codigo = p.codigo;
+      cartel.querySelector(".codigo").textContent = p.codigo;
+      cartel.querySelector(".nombre").textContent = p.nombre.replace(p.codigo, "").trim() || p.nombre;
+      const qr = cartel.querySelector(".qr");
+      qr.src = `${p.codigo}.svg`;
+      qr.alt = `Código QR del paradero ${p.codigo}`;
+      // La dirección, por si alguien no puede escanear
+      cartel.querySelector(".direccion").textContent =
+        URL_PUBLICA.replace(/^https?:\/\//, "").replace(/\/$/, "");
+    }
+    document.getElementById("imprimir").addEventListener("click", () => print());
+  </script>
+</body>
+</html>
