@@ -5,6 +5,9 @@ Universidad Jorge Tadeo Lozano (Bogotá). Es el proyecto de aula de Ingeniería 
 (nocturna, primer semestre) del grupo: Luisa Tovar, Catalina Moreno, Samir Quintero,
 Ángel Parra, Camilo Montaña y Rafael Daniel Aguilera Gamez.
 
+**Autor principal:** Rafael Daniel Aguilera Gamez, con la idea del proyecto y el desarrollo
+de la app, programada junto con Claude (asistente de IA de Anthropic).
+
 **En línea:** <https://dagui711.github.io/crispy-spoon/> (pruebas internas del equipo).
 
 | Fase 1 (MVP)                                  | Estado |
