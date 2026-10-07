@@ -28,7 +28,7 @@ de la app, programada junto con Claude (asistente de IA de Anthropic).
 | Botón de emergencia (123, 155, ubicación por WhatsApp) | ✅ |
 | Compartir reportes por WhatsApp               | ✅ |
 | Resumen semanal y patrones por hora / franja  | ✅ |
-| Indicador de transparencia (indicaciones de la comunidad y antigüedad) | ✅ |
+| Indicador de transparencia (respuestas de la comunidad y antigüedad) | ✅ |
 | Modo noche de alto contraste                  | ✅ |
 | Cómo llegar y CAI cercano (Google Maps)       | ✅ |
 
@@ -41,9 +41,12 @@ de la app, programada junto con Claude (asistente de IA de Anthropic).
   indican lo que dicen otras personas; nadie verifica el incidente.
 - **El límite es por sesión anónima.** El anti-spam (1 reporte cada 2 min) y el voto único
   usan la identidad anónima que Firebase guarda en el navegador. Si alguien borra los datos
-  del navegador, recibe una identidad nueva. Es el costo de permitir participar sin registro.
-- **Sin conexión solo carga la interfaz.** Enviar reportes, ver reportes nuevos, votar y
-  cargar zonas nuevas del mapa necesitan internet.
+  del navegador, abre una ventana de incógnito o usa otro navegador, recibe una identidad
+  nueva y puede volver a reportar o votar. Es el costo de permitir participar sin registro.
+- **Sin conexión solo carga la interfaz.** Se ven las pantallas y los botones, pero no los
+  paraderos, los reportes ni el mapa: los datos no se guardan para usarlos sin conexión.
+  Enviar y ver reportes, votar y usar el mapa necesitan internet. Sin conexión, la app
+  todavía puede decir que no hay reportes o paraderos aunque sí existan.
 
 ## Cómo probarla en tu computador
 

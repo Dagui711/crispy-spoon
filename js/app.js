@@ -281,7 +281,7 @@ function enlaceWhatsApp(texto) {
 function textoParaCompartir(paraderoId, categoria, cuando) {
   const cat = categoriaPorId(categoria);
   return `⚠️ ${cat.icono} ${cat.nombre} en el paradero ${nombreParadero(paraderoId)} (${paraderoId}), ${cuando}\n` +
-    `Mira los reportes o indica si sigue ocurriendo: ${URL_PUBLICA}?paradero=${paraderoId}`;
+    `Abre la app y, en Recientes, indica si sigue ocurriendo: ${URL_PUBLICA}?paradero=${paraderoId}`;
 }
 
 function mostrarConfirmacion(paraderoId, categoria) {
@@ -317,8 +317,8 @@ function textoTransparencia() {
   const t = resumenTransparencia(reportes);
   if (!t.ultimo) return "Todavía no hay reportes.";
   return `${t.activos} reporte${t.activos === 1 ? "" : "s"} activo${t.activos === 1 ? "" : "s"} · ` +
-    `${t.confirmados} ${t.confirmados === 1 ? "sigue" : "siguen"} ocurriendo según la comunidad · ` +
-    `último ${tiempoRelativo(t.ultimo)}`;
+    `${t.confirmados} con «Sigue ocurriendo» · ` +
+    `último ${tiempoRelativo(t.ultimo).replace(/ /g, "\u00a0")}`; // "hace 25 min" no se parte
 }
 
 function pintarListaReportes() {

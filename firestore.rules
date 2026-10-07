@@ -1,16 +1,16 @@
 // ============================================================
 // Reglas de seguridad de Firestore
 // ------------------------------------------------------------
-// La app no pide registro, pero cada celular recibe una identidad
+// La app no pide registro, pero cada navegador recibe una identidad
 // ANÓNIMA de Firebase (un código al azar, sin nombre ni correo).
 // Esa identidad permite:
-//   - Anti-spam: máximo 1 reporte cada 2 minutos por celular.
-//   - Confirmación comunitaria: 1 voto por celular en cada reporte.
+//   - Anti-spam: máximo 1 reporte cada 2 minutos por sesión anónima.
+//   - Confirmación comunitaria: 1 voto por sesión anónima en cada reporte.
 //
 // Resumen:
 //   - Todos pueden LEER paraderos y reportes.
 //   - Crear un reporte: solo si viene bien formado y se respeta la espera.
-//   - Votar: solo sumar +1 a "vigente" o a "resuelto", una vez por celular.
+//   - Votar: solo sumar +1 a "vigente" o a "resuelto", una vez por sesión anónima.
 //   - Nadie puede borrar nada desde la app (solo desde la consola).
 // Se publican en: Firebase → Firestore Database → pestaña "Reglas".
 // ⚠️ Si cambias la espera (2 minutos), cámbiala también en js/config.js.
@@ -30,9 +30,9 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Límites anti-spam: un documento por celular con la hora y el id de su
+    // Límites anti-spam: un documento por sesión anónima con la hora y el id de su
     // último reporte. Solo se puede actualizar si ya pasaron 2 minutos.
-    // Lo puede leer únicamente su dueño (nadie más sabe qué reportó cada celular).
+    // Lo puede leer únicamente su dueño (nadie más sabe qué reportó cada sesión).
     match /limites/{uid} {
       allow read: if conSesion() && request.auth.uid == uid;
       allow create: if conSesion() && request.auth.uid == uid && limiteBienFormado();
@@ -52,7 +52,7 @@ service cloud.firestore {
       allow read: if true;
 
       // Crear: el reporte debe ser válido Y en la misma operación se debe
-      // actualizar el límite del celular (que solo se deja si pasaron 2 min)
+      // actualizar el límite de la sesión (que solo se deja si pasaron 2 min)
       // apuntando a ESTE reporte. Como el límite solo puede apuntar a un
       // reporte, no se pueden colar varios reportes en una sola operación.
       allow create: if conSesion()
@@ -61,13 +61,13 @@ service cloud.firestore {
         && getAfter(/databases/$(database)/documents/limites/$(request.auth.uid)).data.reporteId == reporteId;
 
       // Votar: sumar +1 a un solo contador, a la vez que se crea el voto
-      // del celular (que solo puede existir una vez por reporte).
+      // de la sesión (que solo puede existir una vez por reporte).
       allow update: if conSesion()
         && (votoValido(reporteId, 'vigente') || votoValido(reporteId, 'resuelto'));
 
       allow delete: if false;
 
-      // Un documento por celular que votó: reportes/{id}/votos/{uid}
+      // Un documento por sesión que votó: reportes/{id}/votos/{uid}
       match /votos/{uid} {
         allow read: if conSesion() && request.auth.uid == uid;
         allow create: if conSesion() && request.auth.uid == uid
@@ -103,7 +103,7 @@ service cloud.firestore {
     }
 
     // Un voto es válido si solo cambia el contador indicado, sube en 1,
-    // y el celular no había votado antes en este reporte.
+    // y la sesión no había votado antes en este reporte.
     function votoValido(reporteId, campo) {
       let votoRuta = /databases/$(database)/documents/reportes/$(reporteId)/votos/$(request.auth.uid);
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly([campo])

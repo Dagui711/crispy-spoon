@@ -80,9 +80,9 @@ azar (sin nombre, correo ni teléfono). Ese id **no se guarda en los reportes**,
 solo en `limites` y `votos`, que nadie más puede leer.
 
 **Limitación:** el anti-spam y el voto único funcionan por sesión anónima, no por
-persona ni por celular. Si alguien borra los datos del navegador (o usa otro
-navegador), Firebase le da un id nuevo y puede volver a reportar o votar. Es una
-limitación propia de permitir participar sin registro.
+persona ni por celular. Si alguien borra los datos del navegador, abre una ventana
+de incógnito o usa otro navegador, Firebase le da un id nuevo y puede volver a
+reportar o votar. Es una limitación propia de permitir participar sin registro.
 
 ### Decisiones de diseño (útiles para el documento escrito)
 
@@ -102,7 +102,9 @@ limitación propia de permitir participar sin registro.
   saltar; una regla de Firestore no. La app además avisa cuánto falta esperar.
 - **Transparencia**: cada reporte muestra cuántas personas indican que sigue ocurriendo
   o que ya se resolvió, y qué tan reciente es. Es confirmación comunitaria, no
-  verificación oficial. Los reportes marcados como resueltos no cuentan en el mapa.
+  verificación oficial. Un reporte deja de contar en el mapa cuando las respuestas de
+  "ya se resolvió" igualan o superan a las de "sigue ocurriendo" (por ejemplo, 1 contra 0
+  o un empate 1 a 1).
 - **El conteo por paradero no se guarda**: el mapa cuenta los reportes activos de los
   últimos 7 días en el navegador. Para el volumen de un piloto es más simple y siempre exacto.
 - **Anónimo**: no se guarda nombre, correo, IP ni ubicación GPS de quien reporta. El
