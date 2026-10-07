@@ -15,6 +15,7 @@ const marcadores = {}; // codigo de paradero → marcador en el mapa
 const todosLosMarcadores = []; // paraderos y CAI (para el teclado)
 let marcadorAbierto = null;    // marcador cuya ventanita está abierta
 let autoPaneando = false;      // el mapa se está moviendo para mostrar una ventanita
+let alReportarAqui = null;     // qué hace "Reportar aquí" (lo decide app.js)
 
 // ¿La persona pidió menos movimiento? Entonces el mapa no anima nada.
 const quieto = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -62,7 +63,10 @@ export function nivelPorCantidad(cantidad) {
   return 3;
 }
 
-export function crearMapa(idContenedor, paraderos) {
+// opciones.alReportar(codigo): se llama al tocar "Reportar aquí" en la
+// ventanita de un paradero. El mapa no sabe nada del formulario: solo avisa.
+export function crearMapa(idContenedor, paraderos, opciones = {}) {
+  alReportarAqui = opciones.alReportar ?? null;
   // El zoom va abajo a la derecha para que no tape la ventanita (popup).
   // Con "menos movimiento" no hay zoom animado, desvanecidos ni inercia.
   const sinAnimar = quieto();
@@ -247,7 +251,7 @@ function alAbrirVentanita(marcador, popup) {
   // ventanita; así sus enlaces no quedan después de todos los demás marcadores
   const elMarcador = marcador.getElement();
   if (!elMarcador || elMarcador !== document.activeElement || !elMarcador.matches(":focus-visible")) return;
-  const enfocar = () => ventana.querySelector(".popup-enlace")?.focus();
+  const enfocar = () => ventana.querySelector(".popup-reportar, .popup-enlace")?.focus();
   if (autoPaneando) mapa.once("moveend", enfocar); // espera a que el mapa se acomode
   else enfocar();
 }
@@ -271,6 +275,7 @@ function contenidoPopup(p, cantidad) {
     <div class="popup-cabeza"><span class="placa-codigo"></span><span class="popup-codigo">Paradero SITP</span></div>
     <strong class="popup-nombre"></strong>
     <div class="popup-cantidad"><span class="popup-nivel" aria-hidden="true"></span><span class="popup-cantidad-texto"></span></div>
+    ${alReportarAqui ? `<button type="button" class="popup-reportar">${icono("megaphone")}<span>Reportar aquí</span></button>` : ""}
     <a class="popup-enlace" target="_blank" rel="noopener">${icono("footprints")}<span>Cómo llegar</span>${icono("arrow-up-right", "ico ico-ir")}</a>
     <a class="popup-enlace" target="_blank" rel="noopener">${icono("shield")}<span>Buscar CAI cercano</span>${icono("arrow-up-right", "ico ico-ir")}</a>`;
   div.querySelector(".placa-codigo").textContent = p.codigo;
@@ -281,6 +286,15 @@ function contenidoPopup(p, cantidad) {
   const [llegar, cai] = div.querySelectorAll("a");
   llegar.href = enlaceComoLlegar(p.lat, p.lng);
   cai.href = enlaceBuscarCai(p.lat, p.lng);
+  // "Reportar aquí": cierra la ventanita y le pasa el paradero a app.js
+  const reportar = div.querySelector(".popup-reportar");
+  if (reportar) {
+    reportar.setAttribute("aria-label", `Reportar aquí, en el paradero ${p.codigo}`);
+    reportar.addEventListener("click", () => {
+      mapa.closePopup();
+      alReportarAqui(p.codigo);
+    });
+  }
   return div;
 }
 
