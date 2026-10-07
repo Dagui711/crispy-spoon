@@ -70,13 +70,17 @@ Los 4 códigos se verificaron contra el conjunto de datos abiertos
 [Paraderos zonales del SITP](https://datosabiertos.bogota.gov.co/dataset/paraderos-zonales-del-sitp)
 de Bogotá: el código, el nombre y la ubicación coinciden (a menos de 10 m).
 
-- **Imprimir:** abre el PDF y usa escala 100 % ("tamaño real") con gráficos de fondo.
-- **Antes de pegarlo:** confirma que el código del cartel es el de la señal del paradero.
-  A 36 m del 664A00 hay otro paradero con el mismo nombre, el 665A00.
+- **Imprimir:** abre el PDF y usa escala 100 % ("tamaño real").
+- **Antes de pegarlo:** confirma que el código del cartel es el de la señal del paradero
+  (cada cartel también trae la dirección oficial). Cerca del 664A00 hay otros dos paraderos
+  que también se llaman "Estación Universidades": el 665A00 (a 36 m, con la misma dirección)
+  y el 665B00 (a 75 m). Guíate solo por el código.
 - **Si cambia un paradero o la dirección de la app:** corre `pip install segno` y
   `python qr/generar_qr.py` (lee los códigos de `js/catalogos.js` y la dirección de
-  `js/config.js`). Luego abre `qr/carteles.html` en el navegador y usa **Imprimir →
-  Guardar como PDF** (tamaño Carta, sin márgenes, con gráficos de fondo).
+  `js/config.js`). Luego abre `qr/carteles.html` con el servidor local (ver *Cómo probarla
+  en tu computador*; con doble clic no funciona) o en
+  <https://dagui711.github.io/crispy-spoon/qr/carteles.html>, y usa **Imprimir → Guardar
+  como PDF** (tamaño Carta, sin márgenes, con gráficos de fondo).
 
 ## Cómo probarla en tu computador
 

@@ -102,7 +102,10 @@
       letter-spacing: 0.06em;
     }
     .nombre { margin-top: 3.5mm; font: 700 10mm/1 var(--senal); text-transform: uppercase; }
-    .qr { width: 104mm; height: 104mm; margin-top: 5mm; }
+    .via { margin-top: 2mm; font: 600 5.5mm/1 var(--senal); letter-spacing: 0.08em; color: var(--tinta-2); }
+    .via:empty { display: none; }
+    .aviso-archivo { padding: 10px 12px; border-radius: 8px; background: #FDECEE; color: #8A0F22; font-weight: 600; }
+    .qr { width: 100mm; height: 100mm; margin-top: 4mm; }
     .llamado { margin-top: 3mm; font: 700 11.5mm/1 var(--senal); text-transform: uppercase; }
     .llamado-sub { max-width: 165mm; margin: 2.5mm 0 0; font-size: 5.2mm; line-height: 1.35; color: var(--tinta-2); }
     .direccion { margin-top: 3mm; font-size: 4.4mm; color: var(--tinta-2); }
@@ -150,6 +153,12 @@
       .cartel { zoom: 0.45; margin: 12px auto; }
       .indicaciones { margin: 16px; }
     }
+    @media screen and (max-width: 380px) {
+      .cartel { zoom: 0.4; }
+    }
+    @media screen and (max-width: 340px) {
+      .cartel { zoom: 0.36; }
+    }
   </style>
 </head>
 <body>
@@ -158,15 +167,33 @@
     <p>Un cartel por hoja, tamaño <strong>Carta</strong>. Al imprimir, usa <strong>escala 100 %</strong>
       (o "tamaño real") y activa <strong>gráficos de fondo</strong> para que salgan los colores.</p>
     <p>Antes de pegar cada cartel, confirma que su código es el mismo que el de la señal del paradero.
-      Ojo: junto al 664A00 hay otro paradero con el mismo nombre (665A00).</p>
+      Ojo: cerca del 664A00 hay otros dos paraderos que también se llaman «Estación Universidades»:
+      el 665A00 (a 36 m, con la misma dirección) y el 665B00 (a 75 m). Guíate solo por el código.</p>
+    <p class="aviso-archivo" id="aviso-archivo" hidden>Esta página no funciona abierta con doble clic:
+      ábrela con el servidor local (ver README, «Cómo probarla en tu computador») o en
+      https://dagui711.github.io/crispy-spoon/qr/carteles.html</p>
     <button type="button" id="imprimir">Imprimir</button>
   </section>
 
   <main id="carteles"></main>
 
+  <script>
+    // Abierta con doble clic (file://), el navegador bloquea los módulos de ../js/
+    if (location.protocol === "file:") document.getElementById("aviso-archivo").hidden = false;
+  </script>
   <script type="module">
     import { PARADEROS_SEMILLA } from "../js/catalogos.js";
     import { URL_PUBLICA } from "../js/config.js";
+
+    // Dirección oficial de cada paradero (datos abiertos de paraderos zonales del
+    // SITP, Transmilenio). Sirve para no confundir carteles al pegarlos: 481A00 y
+    // 504A00 tienen el mismo nombre. Solo se usa en los carteles.
+    const DIRECCION_OFICIAL = {
+      "481A00": "KR 5 - CL 22",
+      "504A00": "KR 4 - CL 22",
+      "113A00": "CL 24 - KR 4",
+      "664A00": "KR 3 - CL 21",
+    };
 
     const contenedor = document.getElementById("carteles");
     const plantilla = (p) => `
@@ -182,6 +209,7 @@
           <div class="etiqueta">Paradero SITP</div>
           <div class="codigo"></div>
           <div class="nombre"></div>
+          <div class="via"></div>
           <img class="qr" alt="">
           <div class="llamado">¿Ves algo inseguro? Repórtalo</div>
           <p class="llamado-sub">Escanea con la cámara del celular: el reporte es anónimo, sin registro,
@@ -197,6 +225,7 @@
       cartel.dataset.codigo = p.codigo;
       cartel.querySelector(".codigo").textContent = p.codigo;
       cartel.querySelector(".nombre").textContent = p.nombre.replace(p.codigo, "").trim() || p.nombre;
+      cartel.querySelector(".via").textContent = DIRECCION_OFICIAL[p.codigo] ?? "";
       const qr = cartel.querySelector(".qr");
       qr.src = `${p.codigo}.svg`;
       qr.alt = `Código QR del paradero ${p.codigo}`;

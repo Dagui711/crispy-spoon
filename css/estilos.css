@@ -1666,6 +1666,11 @@ select[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(-
 }
 #contenedor-mapa .popup-reportar:hover { background: var(--marca-hover); border-color: var(--marca-hover); }
 .popup-reportar .ico { width: 20px; height: 20px; }
+/* En mapas angostos la ventanita no cabe al lado de los botones de zoom: mientras
+   está abierta, el zoom se esconde (se sigue pudiendo pellizcar para acercar) */
+@media (max-width: 400px) {
+  #contenedor-mapa:has(.leaflet-popup) .leaflet-control-zoom { visibility: hidden; }
+}
 #contenedor-mapa .popup-enlace:hover { border-color: var(--marca); }
 .popup-enlace .ico { width: 20px; height: 20px; }
 .popup-enlace .ico-ir { width: 16px; height: 16px; margin-left: auto; opacity: 0.8; }

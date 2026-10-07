@@ -14,18 +14,39 @@ Uso (desde la carpeta del proyecto):
 """
 import pathlib
 import re
+import sys
 
 import segno
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
 CARPETA = RAIZ / "qr"
 
+
+def falla(mensaje):
+    sys.exit(f"generar_qr.py: {mensaje}")
+
+
 config = (RAIZ / "js" / "config.js").read_text(encoding="utf-8")
 catalogos = (RAIZ / "js" / "catalogos.js").read_text(encoding="utf-8")
 
-url_app = re.search(r'URL_PUBLICA\s*=\s*"([^"]+)"', config).group(1)
+encontrada = re.search(r"""URL_PUBLICA\s*=\s*["']([^"']+)["']""", config)
+if not encontrada:
+    falla("no encontré URL_PUBLICA en js/config.js")
+url_app = encontrada.group(1)
+if not url_app.endswith("/"):
+    falla(f"URL_PUBLICA debe terminar en '/': {url_app}")
+
+if "PARADEROS_SEMILLA" not in catalogos:
+    falla("no encontré PARADEROS_SEMILLA en js/catalogos.js")
 semilla = catalogos.split("PARADEROS_SEMILLA", 1)[1].split("];", 1)[0]
-codigos = re.findall(r'codigo:\s*"([^"]+)"', semilla)
+# Las líneas comentadas (//) no cuentan
+semilla = "\n".join(l for l in semilla.splitlines() if not l.strip().startswith("//"))
+codigos = re.findall(r"""codigo:\s*["']([^"']+)["']""", semilla)
+if not codigos:
+    falla("no encontré códigos en PARADEROS_SEMILLA (js/catalogos.js)")
+raros = [c for c in codigos if not re.fullmatch(r"\d{3}[A-Z]\d{2}", c)]
+if raros:
+    falla(f"estos códigos no tienen el formato del SITP (ej. 481A00): {raros}")
 
 for codigo in codigos:
     enlace = f"{url_app}?paradero={codigo}"

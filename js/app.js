@@ -302,9 +302,11 @@ function reportarEnParadero(codigo) {
   mostrarError(null); // igual que al cambiar el paradero a mano
   mostrarSeccion("reportar");
   // Se ve el formulario desde arriba (paradero elegido y categorías) y el
-  // foco queda en la primera categoría: es un botón, no abre el teclado.
+  // foco queda en la categoría ya elegida o, si no hay, en la primera: es un
+  // botón, no abre el teclado.
   $("form-reporte").scrollIntoView({ block: "start" });
-  document.querySelector(".categoria")?.focus({ preventScroll: true });
+  (document.querySelector(".categoria.seleccionada") ?? document.querySelector(".categoria"))
+    ?.focus({ preventScroll: true });
 }
 
 function reiniciarFormulario() {
