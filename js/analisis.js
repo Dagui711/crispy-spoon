@@ -39,20 +39,26 @@ export function tiempoRelativo(fecha) {
 }
 
 // ------------------------------------------------------------
-// Indicador de transparencia: ¿qué tan confiable es cada reporte?
-// Combina dos cosas: cuántas personas lo confirmaron y qué tan viejo es.
+// Indicador de transparencia: qué responde la comunidad sobre cada reporte
+// y qué tan reciente es. Cuenta cuántas personas indican "sigue ocurriendo"
+// o "ya se resolvió"; si hay de las dos, muestra ambas. Es confirmación
+// comunitaria, no verificación oficial.
 // ------------------------------------------------------------
+// "1 persona indica" / "3 personas indican"
+const personas = (n, verbo) => `${n} persona${n === 1 ? "" : "s"} ${verbo}${n === 1 ? "" : "n"}`;
+// " · 1 que ya se resolvió" (solo si hay respuestas de ese tipo)
+const ademas = (n, texto) => (n > 0 ? ` ·\u00a0${n}\u00a0que ${texto}` : ""); // "· 1 que" no se parte
+
 export function estadoReporte(r) {
   if (r.resuelto > 0 && r.resuelto >= r.vigente) {
-    return { id: "resuelto", texto: `Posiblemente resuelto (${r.resuelto})` };
+    return { id: "resuelto",
+      texto: `${personas(r.resuelto, "indica")} que ya se resolvió${ademas(r.vigente, "sigue ocurriendo")}` };
   }
-  if (r.vigente >= 2) {
-    return { id: "confirmado", texto: `Confirmado por ${r.vigente} personas` };
+  if (r.vigente >= 1) {
+    return { id: "confirmado",
+      texto: `${personas(r.vigente, "indica")} que sigue ocurriendo${ademas(r.resuelto, "ya se resolvió")}` };
   }
-  if (r.vigente === 1) {
-    return { id: "confirmado", texto: "Confirmado por 1 persona" };
-  }
-  return { id: "sin-confirmar", texto: "Sin confirmar" };
+  return { id: "sin-confirmar", texto: "Aún sin respuestas" };
 }
 
 export function frescura(r) {

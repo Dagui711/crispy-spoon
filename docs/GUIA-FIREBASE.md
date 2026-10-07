@@ -68,7 +68,7 @@ reemplaza cada paradero por su versión nueva.
 ## Paso 4b — Activar el acceso anónimo
 
 El anti-spam y la confirmación comunitaria necesitan una identidad anónima por
-celular (sin nombre ni correo):
+navegador (sin nombre ni correo):
 
 1. Menú izquierdo → **Compilación / Build → Authentication → Comenzar**.
 2. Pestaña **Método de acceso (Sign-in method)** → **Anónimo** → actívalo → **Guardar**.

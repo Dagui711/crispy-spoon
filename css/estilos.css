@@ -1219,8 +1219,8 @@ select[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(-
 .reporte-paradero { color: var(--tinta-2); font-size: 0.9375rem; font-weight: 600; }
 .reporte-descripcion { margin: 8px 0 0; line-height: 1.45; overflow-wrap: anywhere; }
 
-/* Un reporte posiblemente resuelto: borde punteado (señal que no depende
-   del color) y placa apagada, sin perder contraste del texto */
+/* Un reporte que la comunidad indica como resuelto: borde punteado (señal que
+   no depende del color) y placa apagada, sin perder contraste del texto */
 .reporte.estado-resuelto {
   background: var(--superficie-2);
   border: 2px dashed var(--linea-campo);
@@ -1246,7 +1246,8 @@ select[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(-
   font-variant-numeric: tabular-nums;
 }
 
-/* Chips de estado: siempre con texto y con forma propia, en una sola fila */
+/* Chips de estado: siempre con texto y con forma propia; en pantallas angostas
+   el de estado puede pasar a 2 líneas para no salirse de la tarjeta */
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .chip {
   display: inline-flex;
@@ -1262,7 +1263,8 @@ select[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(-
   line-height: 1.3;
   white-space: nowrap;
 }
-/* "Sin confirmar": borde punteado (no depende del color) */
+.chip-estado { max-width: 100%; white-space: normal; }
+/* "Aún sin respuestas": borde punteado (no depende del color) */
 .estado-sin-confirmar .chip-estado { border-style: dashed; border-color: currentColor; background: transparent; }
 .estado-resuelto .chip-estado { border-color: currentColor; background: transparent; }
 .chip::before {
@@ -1291,10 +1293,10 @@ select[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(-
 .chip-frescura.frescura-viejo { background: var(--aviso-fondo); color: var(--aviso); }
 .chip-frescura.frescura-viejo::before { border-radius: 1px; transform: rotate(45deg); }
 
-/* Acciones: confirmar y compartir */
+/* Acciones: responder (sigue ocurriendo / ya se resolvió) y compartir */
 .acciones-reporte {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-top: 12px;
   padding-top: 14px;
@@ -1321,6 +1323,8 @@ select[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(-
   text-decoration: none;
   cursor: pointer;
 }
+/* En pantallas angostas "Sigue ocurriendo" pasa a 2 líneas en vez de salirse */
+.boton-voto { white-space: normal; padding-inline: 8px; }
 .boton-voto::before {
   content: "";
   flex: none;
@@ -1335,8 +1339,8 @@ select[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(-
   mask-image: var(--m-circle-check);
 }
 .boton-voto:hover:not(:disabled), .boton-compartir:hover { border-color: var(--marca); }
-/* Deshabilitado: borde sólido tenue. El punteado se reserva para "Sin
-   confirmar" y "Posiblemente resuelto" (señal que no depende del color). */
+/* Deshabilitado: borde sólido tenue. El punteado se reserva para "Aún sin
+   respuestas" y los reportes indicados como resueltos (señal que no depende del color). */
 .boton-voto:disabled {
   cursor: default;
   border-color: var(--linea);
@@ -1699,8 +1703,9 @@ select[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(-
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
-.nota-mapa { display: flex; gap: 8px; margin: 14px 0 0; line-height: 1.45; }
-.nota-mapa .ico { width: 18px; height: 18px; margin-top: 1px; color: var(--marca-tinta); }
+.nota-mapa, .nota-metodologia { display: flex; gap: 8px; line-height: 1.45; }
+.nota-mapa { margin: 14px 0 0; }
+.nota-mapa .ico, .nota-metodologia .ico { width: 18px; height: 18px; margin-top: 1px; color: var(--marca-tinta); }
 
 /* ============================================================
    Resumen semanal

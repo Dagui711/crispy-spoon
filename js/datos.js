@@ -7,8 +7,8 @@
 //   obtenerParaderos()            → lista de paraderos
 //   crearReporte(datos)           → guarda un reporte nuevo (respeta el anti-spam)
 //   escucharReportes(fn)          → llama a fn cada vez que cambian los reportes
-//   votar(reporteId, tipo)        → confirma "vigente" o "resuelto" (1 vez por celular)
-//   misVotos()                    → { reporteId: tipo } de lo que votó este celular
+//   votar(reporteId, tipo)        → indica "vigente" o "resuelto" (1 vez por sesión anónima)
+//   misVotos()                    → { reporteId: tipo } de lo que votó esta sesión
 //   guardarParadero(p)            → crea/actualiza un paradero (solo lo usa sembrar.html)
 //
 // Hay dos "motores" con las mismas funciones:
@@ -39,9 +39,9 @@ function segundosRestantes(ultimo) {
   return Math.max(0, Math.ceil((ultimo.getTime() + ESPERA_MS - Date.now()) / 1000));
 }
 
-// Los votos de este celular también se recuerdan en el navegador, para
+// Los votos de esta sesión también se recuerdan en el navegador, para
 // pintar los botones sin preguntarle a la base de datos por cada reporte.
-// (La regla de "1 voto por celular" la hace cumplir el servidor, no esto.)
+// (La regla de "1 voto por sesión anónima" la hace cumplir el servidor, no esto.)
 const CLAVE_VOTOS = "paradero-seguro-mis-votos";
 function leerVotosLocales() {
   try {
@@ -79,8 +79,9 @@ async function crearMotorFirebase() {
   const db = getFirestore(app);
   const auth = getAuth(app);
 
-  // Sesión anónima: Firebase le da a este celular un id al azar (sin nombre
-  // ni correo) y lo recuerda. Lo necesitan el anti-spam y los votos.
+  // Sesión anónima: Firebase le da a este navegador un id al azar (sin nombre
+  // ni correo) y lo recuerda. Lo necesitan el anti-spam y los votos. Si alguien
+  // borra los datos del navegador, recibe un id nuevo: es el límite de no pedir registro.
   // Se pide solo cuando hace falta (al reportar o votar), no al abrir la app.
   let promesaSesion = null;
   function sesion() {
@@ -177,7 +178,7 @@ async function crearMotorFirebase() {
     async votar(reporteId, tipo) {
       const uid = await sesion();
       const refReporte = doc(db, "reportes", reporteId);
-      // Contador +1 y "papeleta" del voto, juntos. Si este celular ya
+      // Contador +1 y "papeleta" del voto, juntos. Si esta sesión ya
       // votó, la papeleta ya existe y las reglas rechazan todo.
       const lote = writeBatch(db);
       lote.update(refReporte, { [tipo]: increment(1) });
